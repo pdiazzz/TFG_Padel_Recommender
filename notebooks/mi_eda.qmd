@@ -326,3 +326,4 @@ print(df_clean[["jugador", "cluster"]])
 - La clusterización permite agrupar jugadores en perfiles tácticos, lo que facilita recomendar emparejamientos o estrategias.
 
 - Este EDA proporciona las bases necesarias para construir un recomendador de estrategias y parejas óptimas en pádel.
+
