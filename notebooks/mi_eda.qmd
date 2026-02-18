@@ -311,6 +311,60 @@ print(df_clean[["jugador", "cluster"]])
 
 ```
 
+## Nuevas Métricas de Rendimiento
+
+Para profundizar en el perfil táctico, calculamos tres índices clave:
+
+Índice de Riesgo (Risk Index): Proporción de errores no forzados sobre el total de errores.
+
+Efectividad Ofensiva: Relación entre Winners y Errores No Forzados. Un valor > 1 indica un jugador "rentable" en ataque.
+
+Capacidad de Presión: Porcentaje de "fuerza error" provocado al rival.
+
+```{python}
+# Cálculo de métricas avanzadas
+df_clean['efectividad_ofensiva'] = df_clean['winner'] / df_clean['error no forzado']
+df_clean['indice_riesgo'] = df_clean['error no forzado'] / (df_clean['error no forzado'] + df_clean['fuerza error'] + 1e-6)
+df_clean['presion_ejercida_%'] = df_clean['fuerza error'] / df_clean['total']
+
+# Visualización de la efectividad vs riesgo
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=df_clean, x='indice_riesgo', y='efectividad_ofensiva', hue='jugador', s=100)
+plt.axhline(1, color='red', linestyle='--', alpha=0.6) # Línea de rentabilidad
+plt.title("Relación Riesgo vs. Efectividad por Jugador")
+plt.show()
+
+```
+
+## Análisis por Parejas
+
+El rendimiento en pádel es sinérgico. Agrupamos a los jugadores por sus parejas habituales para comparar el volumen de juego y la eficiencia por lado de la pista.
+
+```{python}
+# Definición de parejas (basado en el circuito actual)
+parejas_dict = {
+    'Agustín Tapia': 'Tapia-Coello',
+    'Arturo Coello': 'Tapia-Coello',
+    'Alejandro Galán': 'Chingotto-Galán',
+    'Federico Chingotto': 'Chingotto-Galán'
+}
+df_clean['pareja'] = df_clean['jugador'].map(parejas_dict)
+
+# Comparativa de volumen de juego por pareja
+df_parejas = df_clean.groupby('pareja')[['winner', 'error no forzado', 'fuerza error']].sum()
+df_parejas.plot(kind='bar', stacked=True, figsize=(10,6), colormap='viridis')
+plt.title("Volumen de puntos finalizados por Pareja")
+plt.ylabel("Número de puntos")
+plt.show()
+
+```
+
+
+## Identificación de Puntos Débiles (Targeting)
+Analizamos quién comete más errores no forzados y quién sufre más bajo presión (fuerza error). Esto permite al sistema recomendar cargar el juego sobre el jugador con menor bola dentro_% o mayor error no forzado_%
+
+
+
 # Conclusiones del EDA
 
 - La distribución de errores, winners y bolas dentro muestra patrones claros entre jugadores, base para un modelo de recomendación.
