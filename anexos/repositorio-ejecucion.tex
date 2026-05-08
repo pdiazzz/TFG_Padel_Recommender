@@ -1,0 +1,54 @@
+\section{Repositorio y ejecucion reproducible}
+
+El repositorio del proyecto es:
+
+\begin{verbatim}
+https://github.com/pdiazmerchante/TFG_Padel_Recommender
+\end{verbatim}
+
+\subsection{Estructura}
+
+\begin{verbatim}
+data/
+  raw/
+  metadata/
+  processed/
+outputs/
+  tables/
+  figures/
+  reports/
+scripts/
+  run_pipeline.py
+  validate_data.py
+  generate_figures.py
+  generate_tables.py
+  generate_recommendations.py
+src/
+  tfg_padel/
+docs/
+  data_dictionary.md
+\end{verbatim}
+
+\subsection{Preparacion del entorno}
+
+\begin{verbatim}
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+\end{verbatim}
+
+\subsection{Comandos de ejecucion}
+
+\begin{verbatim}
+python scripts/run_pipeline.py
+python scripts/validate_data.py
+python scripts/generate_figures.py
+python scripts/generate_tables.py
+python scripts/generate_recommendations.py
+\end{verbatim}
+
+\subsection{Artefactos generados}
+
+El pipeline genera datasets limpios en \texttt{data/processed/}, tablas CSV en \texttt{outputs/tables/}, figuras PNG en \texttt{outputs/figures/} e informes en \texttt{outputs/reports/}. Los datos crudos no se versionan publicamente; deben colocarse localmente en \texttt{data/raw/}.
+

@@ -1,18 +1,14 @@
-[paths]
+﻿[paths]
 raw_dir = "data/raw"
-interim_dir = "data/interim"
+metadata_dir = "data/metadata"
 processed_dir = "data/processed"
+outputs_dir = "outputs"
 
 [data]
 separator = ";"
-encoding = "utf-8"
-infer_dtypes = true
-add_source_column = true      # añade columna con el nombre del archivo
-glob_pattern = "*.csv"        # así pasamos de 1 a N CSV sin tocar código
-
-[read_csv]
-on_bad_lines = "skip"         # o "error"
-low_memory = true
+encoding = "utf-8-sig"
+expected_matches = 6
+excluded_files = ["25_Madrid_Cuartos_chingalan CSV.csv"]
 
 [repro]
 seed = 42

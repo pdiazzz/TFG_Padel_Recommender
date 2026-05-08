@@ -1,4 +1,0 @@
-common
-data
-modeling
-reports

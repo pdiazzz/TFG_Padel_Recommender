@@ -1,10 +1,19 @@
-[project]
+﻿[project]
 name = "tfg_padel"
 version = "0.1.0"
-description = "Sistema de recomendación para pádel (TFG URJC)"
-authors = [{ name = "Pablo Díaz Merchante" }]
+description = "Pipeline offline de analisis y recomendacion tactica para padel"
+authors = [{ name = "Pablo Diaz Merchante" }]
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.2,<3",
+    "numpy>=1.26,<3",
+    "matplotlib>=3.8,<4",
+    "seaborn>=0.13,<1",
+    "scikit-learn>=1.4,<2",
+    "pyarrow>=15,<22",
+    "openpyxl>=3.1,<4",
+]
 
 [build-system]
 requires = ["setuptools>=64"]
@@ -15,5 +24,5 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-namespaces = true
-
+include = ["tfg_padel*"]
+namespaces = false

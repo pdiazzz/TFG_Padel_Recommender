@@ -1,0 +1,30 @@
+\section{Diccionario de datos}
+
+\begin{longtable}{p{0.22\textwidth} p{0.34\textwidth} p{0.14\textwidth} p{0.14\textwidth} p{0.12\textwidth}}
+\hline
+\textbf{Variable} & \textbf{Descripcion} & \textbf{Tipo} & \textbf{Origen} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{match\_id} & Identificador estable del partido & Texto & Derivada & Union y agrupacion \\
+\texttt{jugador} & Jugador etiquetado en la accion & Texto & Original & Metricas jugador-partido \\
+\texttt{pareja} & Pareja del jugador & Texto & Original/derivada & Metricas por pareja \\
+\texttt{golpe\_q} & Tipo de golpe etiquetado & Texto & Original & Filtro de acciones \\
+\texttt{winner} & Etiqueta de punto ganador & Texto & Original & Flag \texttt{es\_winner} \\
+\texttt{error} & Etiqueta de error & Texto & Original & Flags de error \\
+\texttt{fuerza\_error} & Etiqueta de error forzado provocado & Texto & Original & Presion ejercida \\
+\texttt{es\_golpe} & Indica accion analizable & Booleano & Derivada & Dataset de acciones \\
+\texttt{es\_servicio} & Indica servicio/saque & Booleano & Derivada & Conteo de servicios \\
+\texttt{es\_winner} & Indica winner & Booleano & Derivada & Conteo ofensivo \\
+\texttt{es\_error} & Indica error total & Booleano & Derivada & Consistencia \\
+\texttt{es\_error\_no\_forzado} & Indica error no forzado explicito & Booleano & Derivada & Indice de riesgo \\
+\texttt{es\_fuerza\_error} & Indica presion que provoca error & Booleano & Derivada & Presion ejercida \\
+\texttt{winner\_pct} & Winners sobre golpes totales por 100 & Numerico & Derivada & Eficacia ofensiva \\
+\texttt{error\_pct} & Errores sobre golpes totales por 100 & Numerico & Derivada & Riesgo/consistencia \\
+\texttt{indice\_riesgo} & Errores no forzados sobre errores totales & Numerico & Derivada & Perfil de riesgo \\
+\texttt{efectividad\_ofensiva} & Winners sobre errores no forzados & Numerico & Derivada & Perfil ofensivo \\
+\texttt{presion\_ejercida\_pct} & Errores forzados provocados sobre golpes por 100 & Numerico & Derivada & Presion tactica \\
+\hline
+\end{longtable}
+
+Los valores \texttt{NaN} indican ratios no definidos por falta de denominador o dato no disponible. No deben interpretarse como valor cero.
+

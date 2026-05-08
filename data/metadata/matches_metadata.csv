@@ -1,0 +1,7 @@
+match_id,file_name,tournament,round,date,pair_1,pair_2,notes
+rotterdam_2025_final_chingalan_coellotapia,25_Roterdam_Final_Chingalan_CoelloTapia CSV.csv,Rotterdam,Final,pending_review,Chingotto - Galán,Coello - Tapia,Usar como caso de estudio principal
+milan_2025_semifinal_chingalan_dinenno_ausburger,25_Milan_Semifinal_Chingalan_DinnenoAusburguer CSV.csv,Milan,Semifinal,pending_review,Chingotto - Galán,Di Nenno - Ausburger,Nombre Ausburger según fichero original
+rotterdam_2025_semifinal_chingalan_lebron_stupa,25_Roterdam_Semifinal_Chingalan_LebronStupa CSV.csv,Rotterdam,Semifinal,pending_review,Chingotto - Galán,Lebron - Stupaczuk,Revisar acento/nombre Lebrón en memoria
+rotterdam_2025_coellotapia_nietoyanguas,25_Roterdam_CoelloTapia_NietoYanguas CSV.csv,Rotterdam,pending_review,pending_review,Coello - Tapia,Yanguas - Nieto,Partido útil para ampliar histórico de Coello-Tapia
+madrid_2025_cuartos_chingalan_dinenno_ausburger,25_Madrid_Cuartos_chingalan_formato.csv,Madrid,Cuartos,pending_review,Chingotto - Galán,Di Nenno - Ausburger,Usar versión formato.csv; excluir CSV duplicado en UTF-16
+milan_2025_final_chingalan_coellotapia,Milan_Final_Chingalan_CoelloTapia CSV.csv,Milan,Final,pending_review,Chingotto - Galán,Coello - Tapia,Segundo enfrentamiento Chingotto-Galán vs Coello-Tapia
