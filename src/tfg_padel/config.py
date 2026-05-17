@@ -127,6 +127,24 @@ RECOMMENDATION_COLUMNS = [
     "limitations",
 ]
 
+RECOMMENDATIONS_PATH = TABLES_DIR / "recommendations.csv"
+RECOMMENDATIONS_SUMMARY_PATH = TABLES_DIR / "recommendations_summary.csv"
+PLAYER_RECOMMENDATION_CARDS_PATH = TABLES_DIR / "player_recommendation_cards.csv"
+PLAYER_GLOBAL_RECOMMENDATION_SUMMARY_PATH = TABLES_DIR / "player_global_recommendation_summary.csv"
+MATCH_RECOMMENDATION_SUMMARY_PATH = TABLES_DIR / "match_recommendation_summary.csv"
+RECOMMENDATIONS_SUMMARY_TEX_PATH = LATEX_TABLES_DIR / "recommendations_summary.tex"
+PLAYER_RECOMMENDATION_EXAMPLES_TEX_PATH = LATEX_TABLES_DIR / "player_recommendation_examples.tex"
+GLOBAL_PLAYER_SUMMARY_TEX_PATH = LATEX_TABLES_DIR / "global_player_summary.tex"
+RECOMMENDATIONS_REPORT_PATH = REPORTS_DIR / "recommendations_report.pdf"
+PLAYER_RECOMMENDATION_CARDS_REPORT_PATH = REPORTS_DIR / "player_recommendation_cards.pdf"
+
+CLASSICAL_RECOMMENDATIONS_PATH = TABLES_DIR / "classical_recommendations.csv"
+CLASSICAL_NEIGHBORS_PATH = TABLES_DIR / "classical_neighbors.csv"
+CLASSICAL_DIAGNOSTICS_PATH = TABLES_DIR / "classical_recommender_diagnostics.csv"
+CLASSICAL_RECOMMENDER_SUMMARY_PATH = REPORTS_DIR / "classical_recommender_summary.md"
+CLASSICAL_RECOMMENDER_REPORT_PATH = REPORTS_DIR / "classical_recommender_report.pdf"
+MEMORY_UPDATE_CLASSICAL_RECOMMENDER_PATH = REPORTS_DIR / "memory_update_classical_recommender.md"
+
 
 def ensure_directories() -> None:
     """Create every directory used by the reproducible pipeline."""
@@ -143,4 +161,3 @@ def ensure_directories() -> None:
         PROJECT_ROOT / "notebooks" / "exploration",
     ]:
         path.mkdir(parents=True, exist_ok=True)
-

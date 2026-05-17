@@ -8,7 +8,8 @@ __all__ = [
     "metrics",
     "clustering",
     "recommender",
+    "recommendations_reporting",
+    "classical_recommender",
     "validation",
     "reporting",
 ]
-

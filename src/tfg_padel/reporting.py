@@ -10,6 +10,7 @@ from . import config
 from .clustering import run_player_match_clustering
 from .io import read_csv_if_exists, write_csv
 from .recommender import generate_recommendations
+from .recommendations_reporting import write_recommendations_summary
 
 
 def build_dataset_summary(
@@ -233,6 +234,7 @@ def generate_latex_ready_tables() -> list[str]:
         write_csv(df, config.TABLES_DIR / target_name)
 
     write_csv(recommendations, config.TABLES_DIR / "latex_recommendations.csv")
+    write_recommendations_summary(recommendations)
     write_latex_versions()
     return warnings
 

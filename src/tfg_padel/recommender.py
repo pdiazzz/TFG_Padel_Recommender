@@ -7,9 +7,42 @@ from . import config
 
 
 LIMITATION_TEXT = (
-    "Regla heuristica sobre metricas agregadas del partido; no incorpora video, "
-    "estado fisico, marcador contextual ni instrucciones del entrenador."
+    "Recomendación heurística basada en métricas agregadas del partido. "
+    "No incorpora vídeo, marcador contextual, estado físico ni instrucciones tácticas previas."
 )
+
+RULE_DOCUMENTATION = [
+    {
+        "rule_applied": "player_error_pct_above_match_mean",
+        "condition": "El error_pct del jugador es superior a la media de error_pct de los jugadores del mismo partido.",
+        "recommendation_type": "Aumentar la presión o el volumen de juego sobre ese jugador, siempre con cautela contextual.",
+    },
+    {
+        "rule_applied": "high_offensive_efficiency_low_error",
+        "condition": "La efectividad_ofensiva del jugador es igual o superior a la mediana del partido y su error_pct no supera la media del partido.",
+        "recommendation_type": "Evitar concederle bolas cómodas de finalización.",
+    },
+    {
+        "rule_applied": "high_winner_high_error",
+        "condition": "El jugador supera simultáneamente la media del partido en winner_pct y error_pct.",
+        "recommendation_type": "Limitar sus situaciones de ataque directo y buscar contextos que aumenten su toma de riesgo.",
+    },
+    {
+        "rule_applied": "high_volume_low_winner",
+        "condition": "El jugador supera la mediana de total_golpes del partido y queda por debajo de la media de winner_pct.",
+        "recommendation_type": "Interpretarlo como posible constructor del punto más que como finalizador principal.",
+    },
+    {
+        "rule_applied": "pair_error_pct_above_rival",
+        "condition": "La pareja tiene error_pct agregado superior al de la pareja rival en el mismo partido.",
+        "recommendation_type": "Priorizar patrones de intercambio que mantengan presión sostenida sobre la pareja rival y favorezcan la aparición de errores no forzados, evitando asumir riesgos innecesarios en fases neutras del punto.",
+    },
+    {
+        "rule_applied": "no_recommendation_due_to_insufficient_evidence",
+        "condition": "Faltan métricas suficientes o ninguna regla encuentra diferencias claras.",
+        "recommendation_type": "No se genera recomendación táctica; se documenta la falta de evidencia.",
+    },
+]
 
 
 def _row(
@@ -57,7 +90,7 @@ def generate_recommendations(
                     np.nan,
                     "no_recommendation_due_to_insufficient_evidence",
                     "no_recommendation_due_to_insufficient_evidence",
-                    "No hay metricas jugador-partido disponibles.",
+                    "No hay métricas jugador-partido disponibles.",
                     "El pipeline no dispone de evidencia suficiente.",
                 )
             ],
@@ -76,7 +109,7 @@ def generate_recommendations(
                     np.nan,
                     "no_recommendation_due_to_insufficient_evidence",
                     "no_recommendation_due_to_insufficient_evidence",
-                    "Menos de dos jugadores con metricas disponibles.",
+                    "Menos de dos jugadores con métricas disponibles.",
                     "No se fuerza una conclusion tactica con muestra insuficiente.",
                 )
             )
@@ -111,7 +144,7 @@ def generate_recommendations(
                         "error_pct",
                         round(error_pct, 4),
                         "player_error_pct_above_match_mean",
-                        "Aumentar la presion o el volumen de juego sobre este jugador con cautela contextual.",
+                        "Aumentar la presión o el volumen de juego sobre este jugador con cautela contextual.",
                         f"{target} tiene error_pct={error_pct:.2f}, por encima de la media del partido ({mean_error:.2f}).",
                     )
                 )
@@ -132,7 +165,7 @@ def generate_recommendations(
                         "efectividad_ofensiva",
                         round(eff, 4),
                         "high_offensive_efficiency_low_error",
-                        "Evitar concederle bolas comodas de finalizacion.",
+                        "Evitar concederle bolas cómodas de finalización.",
                         f"{target} combina efectividad_ofensiva={eff:.2f} con error_pct={error_pct:.2f}, no superior a la media del partido.",
                     )
                 )
@@ -174,7 +207,7 @@ def generate_recommendations(
                         "total_golpes_and_winner_pct",
                         f"{total_golpes:.0f};{winner_pct:.4f}",
                         "high_volume_low_winner",
-                        "Interpretarlo como posible constructor del punto mas que como finalizador principal.",
+                        "Interpretarlo como posible constructor del punto más que como finalizador principal.",
                         f"{target} supera la mediana de volumen del partido ({median_total:.0f}) y queda por debajo de la media de winner_pct ({mean_winner:.2f}).",
                     )
                 )
@@ -195,7 +228,7 @@ def generate_recommendations(
                             "pair_error_pct_vs_rival",
                             round(float(max_error), 4),
                             "pair_error_pct_above_rival",
-                            "Priorizar patrones que mantengan presion y provoquen errores.",
+                            "Priorizar patrones de intercambio que mantengan presión sostenida sobre la pareja rival y favorezcan la aparición de errores no forzados, evitando asumir riesgos innecesarios en fases neutras del punto.",
                             f"{target} presenta error_pct agregado={max_error:.2f}, superior al rival ({min_error:.2f}).",
                         )
                     )
@@ -210,10 +243,9 @@ def generate_recommendations(
                     np.nan,
                     "no_recommendation_due_to_insufficient_evidence",
                     "no_recommendation_due_to_insufficient_evidence",
-                    "Las reglas no encontraron diferencias suficientemente claras con las metricas disponibles.",
-                    "No se fuerza recomendacion cuando la evidencia relativa no activa ninguna regla.",
+                    "Las reglas no encontraron diferencias suficientemente claras con las métricas disponibles.",
+                    "No se fuerza recomendación cuando la evidencia relativa no activa ninguna regla.",
                 )
             )
 
     return pd.DataFrame(recommendations, columns=config.RECOMMENDATION_COLUMNS)
-

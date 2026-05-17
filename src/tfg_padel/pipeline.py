@@ -14,6 +14,7 @@ from .metrics import (
     compute_player_match_metrics,
 )
 from .recommender import generate_recommendations
+from .recommendations_reporting import write_recommendations_summary
 from .reporting import (
     build_dataset_summary,
     build_matches_summary,
@@ -73,6 +74,7 @@ def run_full_pipeline() -> dict[str, object]:
     )
     warnings.extend(clustering_warnings)
     recommendations = generate_recommendations(player_metrics, pair_metrics)
+    recommendations_summary = write_recommendations_summary(recommendations)
 
     write_csv(flagged, config.PROCESSED_DIR / "matches_clean.csv")
     write_csv(actions, config.PROCESSED_DIR / "actions_clean.csv")
@@ -84,6 +86,7 @@ def run_full_pipeline() -> dict[str, object]:
     write_csv(player_clusters, config.TABLES_DIR / "player_match_clusters.csv")
     write_csv(cluster_profiles, config.TABLES_DIR / "cluster_profiles.csv")
     write_csv(recommendations, config.TABLES_DIR / "recommendations.csv")
+    write_csv(recommendations_summary, config.TABLES_DIR / "recommendations_summary.csv")
 
     dataset_summary = build_dataset_summary(
         metadata=metadata,
@@ -113,6 +116,7 @@ def run_full_pipeline() -> dict[str, object]:
         config.TABLES_DIR / "player_match_clusters.csv",
         config.TABLES_DIR / "cluster_profiles.csv",
         config.TABLES_DIR / "recommendations.csv",
+        config.TABLES_DIR / "recommendations_summary.csv",
         config.REPORTS_DIR / "data_quality_report.md",
         config.REPORTS_DIR / "memoria_updates.md",
     ]
@@ -148,4 +152,3 @@ Duplicados/eventos colapsados: {summary.get('duplicados', 0)}
 Outputs generados:
 {output_text}
 """
-

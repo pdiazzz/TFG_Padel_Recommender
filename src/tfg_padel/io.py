@@ -145,7 +145,21 @@ def load_raw_matches(metadata: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
 
 def write_csv(df: pd.DataFrame, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(path, index=False, encoding="utf-8")
+    content = df.to_csv(index=False, lineterminator="\n")
+    if path.exists():
+        try:
+            existing = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+            if existing == content:
+                return
+        except OSError:
+            pass
+    try:
+        path.write_text(content, encoding="utf-8")
+    except PermissionError as exc:
+        raise PermissionError(
+            f"No se pudo escribir {path}. Cierra el archivo si está abierto en Excel, "
+            "LibreOffice u otro visor y vuelve a ejecutar el comando."
+        ) from exc
 
 
 def read_csv_if_exists(path: Path) -> pd.DataFrame:
