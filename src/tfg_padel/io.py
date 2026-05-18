@@ -39,34 +39,49 @@ def sniff_separator(path: Path, encoding: str) -> str | None:
         return None
 
 
+def _read_csv(path: Path, sep: str, encoding: str) -> pd.DataFrame:
+    def trim_trailing_empty_fields(fields: list[str]) -> list[str] | None:
+        if fields and fields[-1] == "":
+            return fields[:-1]
+        return None
+
+    if encoding == "utf-16":
+        return pd.read_csv(
+            path,
+            sep=sep,
+            encoding=encoding,
+            engine="python",
+            on_bad_lines=trim_trailing_empty_fields,
+        )
+    return pd.read_csv(path, sep=sep, encoding=encoding, on_bad_lines="warn", low_memory=False)
+
+
 def read_csv_with_fallback(path: Path, expected_sep: str = config.RAW_SEPARATOR) -> tuple[pd.DataFrame, list[str], dict[str, Any]]:
     warnings: list[str] = []
-    encodings = ["utf-8-sig", "utf-8", "latin1", "utf-16"]
+    encodings = ["utf-8-sig", "utf-8", "utf-16", "latin1"]
     separators = [expected_sep]
     last_error: Exception | None = None
 
     for encoding in encodings:
         for sep in separators:
             try:
-                df = pd.read_csv(path, sep=sep, encoding=encoding, on_bad_lines="warn", low_memory=False)
+                df = _read_csv(path, sep, encoding)
                 if df.shape[1] <= 1:
                     detected = sniff_separator(path, encoding)
                     if detected and detected != sep:
                         warnings.append(
                             f"{path.name}: separador '{sep}' produjo una sola columna; se intenta '{detected}'."
                         )
-                        df = pd.read_csv(
-                            path,
-                            sep=detected,
-                            encoding=encoding,
-                            on_bad_lines="warn",
-                            low_memory=False,
-                        )
+                        df = _read_csv(path, detected, encoding)
                         sep = detected
                     elif expected_sep != ",":
                         warnings.append(
                             f"{path.name}: lectura con separador '{sep}' produjo una sola columna."
                         )
+                if encoding == "utf-16":
+                    warnings.append(
+                        f"{path.name}: lectura UTF-16 con tolerancia a campos vacios finales extra."
+                    )
                 info = {"encoding": encoding, "separator": sep, "rows": len(df), "columns": len(df.columns)}
                 return df, warnings, info
             except Exception as exc:  # pandas raises several parser/codec exceptions here

@@ -17,7 +17,7 @@ Preparar un flujo reproducible que permita:
 
 ## Alcance
 
-La experimentacion principal usa seis partidos reales declarados en `data/metadata/matches_metadata.csv`. La version alternativa `25_Madrid_Cuartos_chingalan CSV.csv` queda excluida para evitar duplicar observaciones del partido de Madrid.
+La experimentacion principal usa diez partidos reales declarados en `data/metadata/matches_metadata.csv`. La version alternativa `25_Madrid_Cuartos_chingalan CSV.csv` queda excluida para evitar duplicar observaciones del partido de Madrid.
 
 Las recomendaciones son apoyo a la decisión técnica del entrenador. No sustituyen el análisis experto ni incorporan vídeo, marcador contextual avanzado, estado físico o instrucciones tácticas previas.
 
@@ -38,6 +38,7 @@ scripts/
   generate_figures.py
   generate_tables.py
   generate_recommendations.py
+  generate_match_dashboards.py
   legacy/              # scripts antiguos conservados como trazabilidad
 src/
   tfg_padel/           # paquete principal del pipeline
@@ -63,7 +64,7 @@ python -m pip install -r requirements.txt
 
 ## Datos de entrada esperados
 
-Los CSV crudos deben colocarse en `data/raw/` y leerse con separador `;`. La metadata define los seis partidos usados:
+Los CSV crudos deben colocarse en `data/raw/`. El lector usa `;` como separador esperado y aplica fallback para CSV UTF-16 separados por coma. La metadata define los diez partidos usados:
 
 - `25_Roterdam_Final_Chingalan_CoelloTapia CSV.csv`
 - `25_Milan_Semifinal_Chingalan_DinnenoAusburguer CSV.csv`
@@ -71,6 +72,10 @@ Los CSV crudos deben colocarse en `data/raw/` y leerse con separador `;`. La met
 - `25_Roterdam_CoelloTapia_NietoYanguas CSV.csv`
 - `25_Madrid_Cuartos_chingalan_formato.csv`
 - `Milan_Final_Chingalan_CoelloTapia CSV.csv`
+- `25_Barcelona_Cuartos_ChinGalan_MomoGuerrero CSV.csv`
+- `25_Barcelona_Cuartos_CoelloTapia_BergaminiLeal CSV.csv`
+- `25_Barcelona_Final_ChinGalan_CoelloTapia CSV.csv`
+- `25_Barcelona_Semis_ChinGalan_NavarroSanz.csv`
 
 ## Ejecución
 
@@ -89,6 +94,7 @@ python scripts/generate_tables.py
 python scripts/generate_recommendations.py
 python scripts/generate_recommendations_report.py
 python scripts/generate_classical_recommendations.py
+python scripts/generate_match_dashboards.py
 ```
 
 ## Outputs principales
@@ -113,6 +119,7 @@ python scripts/generate_classical_recommendations.py
 - `outputs/tables/classical_neighbors.csv`
 - `outputs/tables/classical_recommender_diagnostics.csv`
 - `outputs/figures/*.png`
+- `outputs/figures/match_dashboards/dashboard_<match_id>.png`
 - `outputs/reports/data_quality_report.md`
 - `outputs/reports/technical_review.md`
 - `outputs/reports/memoria_updates.md`
@@ -121,6 +128,7 @@ python scripts/generate_classical_recommendations.py
 - `outputs/reports/classical_recommender_summary.md`
 - `outputs/reports/classical_recommender_report.pdf`
 - `outputs/reports/memory_update_classical_recommender.md`
+- `outputs/tables/match_dashboard_summary.csv`
 
 ## Recomendaciones
 
@@ -176,7 +184,7 @@ El PDF `classical_recommender_report.pdf` explica el criterio de generación, la
 
 ## Limitaciones
 
-- Muestra reducida: seis partidos reales.
+- Muestra todavia reducida: diez partidos reales.
 - Dependencia del etiquetado manual de eventos.
 - Los datos crudos no se versionan públicamente.
 - Las fechas quedan como `pending_review` hasta verificación externa.

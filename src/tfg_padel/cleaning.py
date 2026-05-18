@@ -31,6 +31,9 @@ COLUMN_RENAMES = {
     "clip_start": "clip_start",
     "clip_end": "clip_end",
     "row_name": "row_name",
+    "inicio_de_clip": "clip_start",
+    "fin_de_clip": "clip_end",
+    "nombre_de_fila": "row_name",
 }
 
 COORDINATE_ALIASES = {

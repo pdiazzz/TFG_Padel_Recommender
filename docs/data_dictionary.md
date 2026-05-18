@@ -6,7 +6,7 @@ Este documento resume las columnas detectadas y las variables derivadas usadas p
 
 En los CSV locales se han detectado columnas M3 como:
 
-- Identificacion temporal: `Row Name`, `Clip Start`, `Clip End`.
+- Identificacion temporal: `Row Name`, `Clip Start`, `Clip End` y sus variantes `Nombre de Fila`, `Inicio de Clip`, `Fin de Clip`.
 - Marcador: `Set_num`, `Set_P1`, `Set_P2`, `Juego_P1`, `Juego_P2`, `Punto_P1`, `Punto_P2`.
 - Etiquetado de acción: `Jugador`, `Pareja`, `Servicio`, `Golpe_q`, `Cara_pala`, `Pared`.
 - Resultado del punto o acción: `Winner`, `Error`, `Fuerza error`, `Punto_win`, `Punto_lost`, `Break_point`, `Break_fav`, `Break_con`, `Set_point`, `Set_win`, `Set_lost`, `Match point`.
@@ -22,6 +22,9 @@ El pipeline convierte nombres a `snake_case` sin tildes y coalesce alias frecuen
 | `Row Name` | `row_name` | clave de evento |
 | `Clip Start` | `clip_start` | orden temporal |
 | `Clip End` | `clip_end` | clave de evento |
+| `Nombre de Fila` | `row_name` | clave de evento |
+| `Inicio de Clip` | `clip_start` | orden temporal |
+| `Fin de Clip` | `clip_end` | clave de evento |
 | `Jugador` | `jugador` | agrupacion por jugador |
 | `Pareja` | `pareja` | agrupacion por pareja |
 | `Golpe_q` | `golpe_q` | filtro de acciones analizables |

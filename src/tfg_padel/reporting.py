@@ -258,6 +258,10 @@ def write_memoria_updates() -> None:
     player_metrics = read_csv_if_exists(config.PROCESSED_DIR / "player_match_metrics.csv")
     pair_metrics = read_csv_if_exists(config.PROCESSED_DIR / "pair_match_metrics.csv")
     cluster_profiles = read_csv_if_exists(config.TABLES_DIR / "cluster_profiles.csv")
+    dataset_map = {}
+    if not dataset.empty and {"metric", "value"}.issubset(dataset.columns):
+        dataset_map = dict(zip(dataset["metric"], dataset["value"]))
+    partidos_principales = dataset_map.get("partidos_principales", "los partidos declarados")
 
     def table_preview(df: pd.DataFrame, n: int = 8) -> str:
         if df.empty:
@@ -309,17 +313,17 @@ def write_memoria_updates() -> None:
 
 ## Texto sugerido para `experimentacion.tex`
 
-La experimentacion se plantea como una evaluacion offline sobre seis partidos reales procedentes de M3 Padel Academy. Para evitar sesgos por duplicidad, se utiliza la version `25_Madrid_Cuartos_chingalan_formato.csv` del partido de Madrid y se excluye la version alternativa indicada en el informe tecnico. El analisis combina metricas por jugador-partido, metricas por pareja-partido, agregados globales, clustering descriptivo a nivel jugador-partido y recomendaciones tacticas interpretables basadas en reglas.
+La experimentacion se plantea como una evaluacion offline sobre {partidos_principales} partidos reales procedentes de M3 Padel Academy. Para evitar sesgos por duplicidad, se utiliza la version `25_Madrid_Cuartos_chingalan_formato.csv` del partido de Madrid y se excluye la version alternativa indicada en el informe tecnico. El analisis combina metricas por jugador-partido, metricas por pareja-partido, agregados globales, clustering descriptivo a nivel jugador-partido y recomendaciones tacticas interpretables basadas en reglas.
 
 El caso de estudio principal se mantiene en la final de Rotterdam 2025 entre Chingotto-Galan y Coello-Tapia, pero las conclusiones se contextualizan con el resto de partidos disponibles. El clustering se interpreta como herramienta descriptiva y no como prueba causal.
 
 ## Texto sugerido para `descripcion-informatica.tex`
 
-El sistema se implementa como un pipeline reproducible en Python, ejecutable con `python scripts/run_pipeline.py`. El flujo lee la metadata de partidos, carga los CSV crudos con separador `;`, normaliza columnas, colapsa eventos, genera flags derivados, separa acciones analizables, calcula metricas, ejecuta clustering descriptivo y exporta tablas, figuras e informes. El recomendador no es un sistema en tiempo real: produce recomendaciones heuristicas e interpretables a partir de metricas agregadas.
+El sistema se implementa como un pipeline reproducible en Python, ejecutable con `python scripts/run_pipeline.py`. El flujo lee la metadata de partidos, carga los CSV crudos con separador declarado o detectado por fallback, normaliza columnas, colapsa eventos, genera flags derivados, separa acciones analizables, calcula metricas, ejecuta clustering descriptivo y exporta tablas, figuras e informes. El recomendador no es un sistema en tiempo real: produce recomendaciones heuristicas e interpretables a partir de metricas agregadas.
 
 ## Texto sugerido para `conclusiones.tex`
 
-La version actual amplia el alcance desde un unico caso de estudio a una evaluacion sobre seis partidos reales. Esto mejora la trazabilidad del sistema y permite comparar patrones entre partidos, aunque la muestra sigue siendo limitada y dependiente del etiquetado manual. Las recomendaciones deben entenderse como apoyo a la decision tactica del entrenador, no como sustituto del analisis tecnico experto.
+La version actual amplia el alcance de la evaluacion a {partidos_principales} partidos reales. Esto mejora la trazabilidad del sistema y permite comparar patrones entre partidos, aunque la muestra sigue siendo limitada y dependiente del etiquetado manual. Las recomendaciones deben entenderse como apoyo a la decision tactica del entrenador, no como sustituto del analisis tecnico experto.
 
 ## Advertencias para no sobreinterpretar
 
@@ -366,6 +370,7 @@ def write_technical_review(
     output_files = sorted(output_files)
     generated = "\n".join(f"- `{path}`" for path in output_files) if output_files else "- Sin outputs generados."
     warning_text = "\n".join(f"- {item}" for item in warnings) if warnings else "- Sin warnings adicionales."
+    partidos_procesados = pipeline_summary.get("partidos_procesados", "los partidos declarados")
 
     text = f"""# Revision tecnica del repositorio
 
@@ -388,6 +393,8 @@ python scripts/validate_data.py
 python scripts/generate_figures.py
 python scripts/generate_tables.py
 python scripts/generate_recommendations.py
+python scripts/generate_recommendations_report.py
+python scripts/generate_classical_recommendations.py
 ```
 
 ## Resumen de ejecucion
@@ -414,14 +421,14 @@ python scripts/generate_recommendations.py
 
 ## Puntos que debe mencionar la memoria
 
-- La experimentacion principal usa seis partidos reales.
+- La experimentacion principal usa {partidos_procesados} partidos reales.
 - El partido duplicado de Madrid queda excluido para no duplicar observaciones.
 - Los NaN en ratios significan division no definida, no cero rendimiento.
 - El caso de estudio principal es Rotterdam final Chingotto-Galan vs Coello-Tapia.
 
 ## Incoherencias detectadas entre memoria y codigo
 
-- Si la memoria habla de un unico partido, debe actualizarse a evaluacion sobre seis partidos mas caso de estudio.
+- Si la memoria habla de un unico partido o de seis partidos, debe actualizarse a la muestra actual declarada en metadata.
 - Si la memoria habla de recomendador en tiempo real, debe corregirse a pipeline offline con reglas interpretables.
 - Si la memoria presenta clustering global por jugador como analisis principal, debe cambiarse a clustering jugador-partido.
 
@@ -434,7 +441,7 @@ python scripts/generate_recommendations.py
 | Promesa de la memoria | Evidencia real del codigo | Riesgo | Correccion recomendada |
 |---|---|---|---|
 | Sistema de recomendacion deportiva | `src/tfg_padel/recommender.py` genera reglas heuristicas sobre CSV agregados | El tribunal puede esperar ML supervisado o tiempo real | Describirlo como apoyo offline a la decision tactica |
-| Evaluacion robusta | Hay seis partidos, pero muestra limitada y etiquetado manual | Sobreinterpretar patrones como conclusiones generales | Hablar de evaluacion exploratoria multi-partido |
+| Evaluacion robusta | Hay {partidos_procesados} partidos, pero muestra limitada y etiquetado manual | Sobreinterpretar patrones como conclusiones generales | Hablar de evaluacion exploratoria multi-partido |
 | Clustering de jugadores | `src/tfg_padel/clustering.py` clusteriza jugador-partido con scaler y k prudente | Confundir clusters con tipos universales de jugador | Presentar clusters como perfiles relativos a la muestra |
 | Datos reales completos | `data/raw/` esta ignorado y depende del entorno local | Reproducibilidad externa incompleta sin datos | Documentar colocacion esperada de CSV y metadata |
 | Calidad del dato suficiente | `outputs/reports/data_quality_report.md` registra ausencias y warnings | Que falten columnas o haya inconsistencias por CSV | Incluir limitaciones y warnings en la memoria |

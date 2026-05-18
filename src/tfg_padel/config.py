@@ -42,6 +42,10 @@ MAIN_MATCH_FILES = [
     "25_Roterdam_CoelloTapia_NietoYanguas CSV.csv",
     "25_Madrid_Cuartos_chingalan_formato.csv",
     "Milan_Final_Chingalan_CoelloTapia CSV.csv",
+    "25_Barcelona_Cuartos_ChinGalan_MomoGuerrero CSV.csv",
+    "25_Barcelona_Cuartos_CoelloTapia_BergaminiLeal CSV.csv",
+    "25_Barcelona_Final_ChinGalan_CoelloTapia CSV.csv",
+    "25_Barcelona_Semis_ChinGalan_NavarroSanz.csv",
 ]
 
 EXCLUDED_RAW_FILES = [

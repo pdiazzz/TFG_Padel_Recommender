@@ -7,7 +7,7 @@ outputs_dir = "outputs"
 [data]
 separator = ";"
 encoding = "utf-8-sig"
-expected_matches = 6
+expected_matches = 10
 excluded_files = ["25_Madrid_Cuartos_chingalan CSV.csv"]
 
 [repro]
