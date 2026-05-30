@@ -118,40 +118,60 @@ def generate_figures() -> list[str]:
     if player_match.empty:
         _warn(warnings, "No se genera riesgo_efectividad.png: falta player_match_metrics.csv.")
     else:
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(9, 5.5))
         sns.scatterplot(
             data=player_match,
             x="indice_riesgo",
             y="efectividad_ofensiva",
             hue="pareja",
-            style="tournament",
             s=80,
+            marker="o",
+            edgecolor="black",
+            linewidth=0.35,
+            alpha=0.85,
         )
         plt.title("Riesgo y efectividad ofensiva por jugador-partido")
-        plt.xlabel("Indice de riesgo")
+        plt.xlabel("Índice de riesgo")
         plt.ylabel("Efectividad ofensiva")
+        plt.grid(True, alpha=0.25, linewidth=0.6)
+        plt.legend(title="Pareja", bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0)
         _save_plot(config.FIGURES_DIR / "riesgo_efectividad.png")
 
     if clusters.empty:
         if not player_match.empty:
             _, clusters, _, cluster_warnings = run_player_match_clustering(player_match)
             warnings.extend(cluster_warnings)
-    if clusters.empty or "cluster" not in clusters.columns:
+    cluster_plot_columns = {"winner_pct", "error_pct", "cluster"}
+    missing_cluster_plot_columns = sorted(cluster_plot_columns - set(clusters.columns))
+    if clusters.empty or missing_cluster_plot_columns:
         _warn(warnings, "No se genera clustering_jugadores.png: faltan clusters.")
     else:
-        plt.figure(figsize=(8, 5))
+        plot_data = clusters.copy()
+        plot_data["cluster"] = plot_data["cluster"].astype(str)
+        cluster_order = sorted(
+            plot_data["cluster"].dropna().unique(),
+            key=lambda value: (
+                not str(value).lstrip("-").isdigit(),
+                int(value) if str(value).lstrip("-").isdigit() else str(value),
+            ),
+        )
+        plt.figure(figsize=(9, 5.5))
         sns.scatterplot(
-            data=clusters,
+            data=plot_data,
             x="winner_pct",
             y="error_pct",
             hue="cluster",
-            style="pareja",
+            hue_order=cluster_order,
             s=80,
             palette="Set2",
+            edgecolor="black",
+            linewidth=0.4,
+            alpha=0.9,
         )
-        plt.title("Clusters jugador-partido")
+        plt.title("Clusters jugador--partido")
         plt.xlabel("Winner %")
         plt.ylabel("Error %")
+        plt.legend(title="Cluster", frameon=True)
         _save_plot(config.FIGURES_DIR / "clustering_jugadores.png")
 
     if pair_global.empty:
@@ -313,24 +333,24 @@ def write_memoria_updates() -> None:
 
 ## Texto sugerido para `experimentacion.tex`
 
-La experimentacion se plantea como una evaluacion offline sobre {partidos_principales} partidos reales procedentes de M3 Padel Academy. Para evitar sesgos por duplicidad, se utiliza la version `25_Madrid_Cuartos_chingalan_formato.csv` del partido de Madrid y se excluye la version alternativa indicada en el informe tecnico. El analisis combina metricas por jugador-partido, metricas por pareja-partido, agregados globales, clustering descriptivo a nivel jugador-partido y recomendaciones tacticas interpretables basadas en reglas.
+La experimentacion se plantea como una evaluacion offline sobre {partidos_principales} partidos reales procedentes de M3 Padel Academy. Para evitar sesgos por duplicidad, se utiliza la version `25_Madrid_Cuartos_chingalan_formato.csv` del partido de Madrid y se excluye la version alternativa indicada en el informe tecnico. El analisis combina metricas por jugador-partido, metricas por pareja-partido, agregados globales, clustering descriptivo a nivel jugador-partido y orientaciones tacticas interpretables basadas en reglas.
 
 El caso de estudio principal se mantiene en la final de Rotterdam 2025 entre Chingotto-Galan y Coello-Tapia, pero las conclusiones se contextualizan con el resto de partidos disponibles. El clustering se interpreta como herramienta descriptiva y no como prueba causal.
 
 ## Texto sugerido para `descripcion-informatica.tex`
 
-El sistema se implementa como un pipeline reproducible en Python, ejecutable con `python scripts/run_pipeline.py`. El flujo lee la metadata de partidos, carga los CSV crudos con separador declarado o detectado por fallback, normaliza columnas, colapsa eventos, genera flags derivados, separa acciones analizables, calcula metricas, ejecuta clustering descriptivo y exporta tablas, figuras e informes. El recomendador no es un sistema en tiempo real: produce recomendaciones heuristicas e interpretables a partir de metricas agregadas.
+El sistema se implementa como un pipeline reproducible en Python, ejecutable con `python scripts/run_pipeline.py`. El flujo lee la metadata de partidos, carga los CSV crudos con separador declarado o detectado por fallback, normaliza columnas, colapsa eventos, genera flags derivados, separa acciones analizables, calcula metricas, ejecuta clustering descriptivo y exporta tablas, figuras e informes. Las orientaciones tacticas se generan offline mediante reglas heuristicas e interpretables a partir de metricas agregadas.
 
 ## Texto sugerido para `conclusiones.tex`
 
-La version actual amplia el alcance de la evaluacion a {partidos_principales} partidos reales. Esto mejora la trazabilidad del sistema y permite comparar patrones entre partidos, aunque la muestra sigue siendo limitada y dependiente del etiquetado manual. Las recomendaciones deben entenderse como apoyo a la decision tactica del entrenador, no como sustituto del analisis tecnico experto.
+La version actual amplia el alcance de la evaluacion a {partidos_principales} partidos reales. Esto mejora la trazabilidad del sistema y permite comparar patrones entre partidos, aunque la muestra sigue siendo limitada y dependiente del etiquetado manual. Las orientaciones deben entenderse como apoyo a la decision tactica del entrenador, no como sustituto del analisis tecnico experto.
 
 ## Advertencias para no sobreinterpretar
 
 - Las metricas dependen de la calidad y consistencia del etiquetado manual.
 - Los ratios con denominador cero se representan como NaN, no como rendimiento nulo.
 - El clustering es descriptivo y sensible al numero reducido de observaciones jugador-partido.
-- Las recomendaciones son reglas heuristicas basadas en evidencia agregada, no inferencia causal.
+- Las orientaciones son reglas heuristicas basadas en evidencia agregada, no inferencia causal.
 """
     (config.REPORTS_DIR / "memoria_updates.md").write_text(text, encoding="utf-8")
 
@@ -415,7 +435,7 @@ python scripts/generate_classical_recommendations.py
 
 - Los datos crudos no se versionan publicamente; el evaluador necesita colocar los CSV en `data/raw/`.
 - Las fechas de partidos quedan como `pending_review` en metadata porque no se han verificado con fuente externa.
-- Las recomendaciones son heuristicas y offline; no deben presentarse como sistema en tiempo real.
+- Las orientaciones son heuristicas y offline; no deben presentarse como decisiones automaticas en tiempo real.
 - El clustering usa pocas observaciones jugador-partido y debe interpretarse como apoyo descriptivo.
 - La variable `Fuerza error` se interpreta como presion ejercida/errores forzados provocados si existe en el etiquetado.
 
@@ -429,7 +449,7 @@ python scripts/generate_classical_recommendations.py
 ## Incoherencias detectadas entre memoria y codigo
 
 - Si la memoria habla de un unico partido o de seis partidos, debe actualizarse a la muestra actual declarada en metadata.
-- Si la memoria habla de recomendador en tiempo real, debe corregirse a pipeline offline con reglas interpretables.
+- Si la memoria habla de decisiones tacticas en tiempo real, debe corregirse a pipeline offline con reglas interpretables.
 - Si la memoria presenta clustering global por jugador como analisis principal, debe cambiarse a clustering jugador-partido.
 
 ## Advertencias registradas
@@ -440,7 +460,7 @@ python scripts/generate_classical_recommendations.py
 
 | Promesa de la memoria | Evidencia real del codigo | Riesgo | Correccion recomendada |
 |---|---|---|---|
-| Sistema de recomendacion deportiva | `src/tfg_padel/recommender.py` genera reglas heuristicas sobre CSV agregados | El tribunal puede esperar ML supervisado o tiempo real | Describirlo como apoyo offline a la decision tactica |
+| Herramienta autonoma de decision tactica | `src/tfg_padel/recommender.py` genera orientaciones heuristicas sobre CSV agregados | El tribunal puede esperar ML supervisado o tiempo real | Describirlo como apoyo offline a la decision tactica |
 | Evaluacion robusta | Hay {partidos_procesados} partidos, pero muestra limitada y etiquetado manual | Sobreinterpretar patrones como conclusiones generales | Hablar de evaluacion exploratoria multi-partido |
 | Clustering de jugadores | `src/tfg_padel/clustering.py` clusteriza jugador-partido con scaler y k prudente | Confundir clusters con tipos universales de jugador | Presentar clusters como perfiles relativos a la muestra |
 | Datos reales completos | `data/raw/` esta ignorado y depende del entorno local | Reproducibilidad externa incompleta sin datos | Documentar colocacion esperada de CSV y metadata |

@@ -1,4 +1,4 @@
-"""Offline analytics pipeline for the padel TFG project."""
+"""Offline decision-support analytics for the padel TFG project."""
 
 __all__ = [
     "config",

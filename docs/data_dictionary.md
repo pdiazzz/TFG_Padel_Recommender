@@ -100,20 +100,20 @@ Los porcentajes se expresan en escala 0-100. Por ejemplo, `winner_pct = 12.5` si
 
 Las métricas dependen de la consistencia de las etiquetas del CSV. Si una columna falta en un partido, el pipeline registra warning y continúa cuando la métrica puede calcularse con las columnas disponibles. El informe de calidad detalla ausencias, formatos inconsistentes y divisiones por cero controladas.
 
-## Salidas de recomendaciones
+## Salidas de orientaciones tácticas
 
-`outputs/tables/recommendations.csv` conserva la trazabilidad completa de cada recomendacion:
+`outputs/tables/recommendations.csv` conserva la trazabilidad completa de cada orientación táctica generada por reglas:
 
 | Columna | Descripcion |
 |---|---|
-| `match_id` | partido al que pertenece la recomendacion |
+| `match_id` | partido al que pertenece la orientación |
 | `scope` | nivel del objetivo: `player`, `pair`, `match` o equivalente |
 | `target` | jugador, pareja o partido objetivo |
 | `evidence_metric` | metrica que activa o justifica la regla |
 | `evidence_value` | valor observado de la metrica de evidencia |
 | `rule_applied` | regla heuristica aplicada |
-| `recommendation` | recomendacion tactica generada |
-| `justification` | explicacion cuantitativa de la recomendacion |
+| `recommendation` | orientación táctica generada |
+| `justification` | explicación cuantitativa de la orientación |
 | `limitations` | limites interpretativos de la regla |
 
 `outputs/tables/recommendations_summary.csv` resume la salida anterior con:
@@ -122,11 +122,11 @@ Las métricas dependen de la consistencia de las etiquetas del CSV. Si una colum
 |---|---|
 | `summary_type` | tipo de resumen: `total`, `by_match`, `by_rule`, `by_scope` |
 | `category` | categoria concreta dentro del resumen |
-| `count` | numero de recomendaciones |
-| `share_pct` | porcentaje sobre el total de filas de recomendaciones |
+| `count` | número de orientaciones |
+| `share_pct` | porcentaje sobre el total de filas |
 | `notes` | aclaracion metodologica si aplica |
 
-`outputs/tables/player_recommendation_cards.csv` consolida las recomendaciones de `scope == "player"` en una ficha por jugador y partido:
+`outputs/tables/player_recommendation_cards.csv` consolida las orientaciones de `scope == "player"` en una ficha por jugador y partido:
 
 | Columna | Descripcion |
 |---|---|
@@ -143,8 +143,8 @@ Las métricas dependen de la consistencia de las etiquetas del CSV. Si una colum
 | `priority_reason` | justificacion textual de la prioridad asignada |
 | `priority_score` | puntuacion auxiliar basada en numero de reglas y perfil |
 | `tactical_diagnosis` | lectura tactica prudente del patron observado |
-| `main_recommendation` | recomendacion principal consolidada |
-| `secondary_recommendation` | recomendacion secundaria, si procede |
+| `main_recommendation` | orientación principal consolidada |
+| `secondary_recommendation` | orientación secundaria, si procede |
 | `coach_note` | nota de uso para entrenador o analista |
 | `limitations` | limitaciones agregadas sin duplicados |
 
@@ -194,13 +194,13 @@ La prioridad de la ficha se interpreta de forma orientativa:
 | `match_id` | partido resumido |
 | `match_label` | nombre legible del partido |
 | `player_cards` | numero de fichas de jugador |
-| `pair_recommendations` | recomendaciones de pareja en el partido |
+| `pair_recommendations` | orientaciones de pareja en el partido |
 | `high_priority_player_cards` | fichas individuales de prioridad alta |
 | `main_player_profiles` | perfiles tacticos predominantes |
 | `players_with_high_priority` | jugadores con ficha de prioridad alta |
 | `summary_text` | lectura textual breve del partido |
 
-## Salidas del recomendador clásico basado en contenido
+## Salidas de la línea base basada en contenido
 
 `outputs/tables/classical_neighbors.csv` contiene los vecinos más similares de cada observación jugador-partido:
 
@@ -215,9 +215,9 @@ La prioridad de la ficha se interpreta de forma orientativa:
 | `neighbor_player` | jugador vecino |
 | `similarity` | similitud coseno entre vectores normalizados |
 | `neighbor_profile` | perfil heurístico del vecino si existe ficha previa |
-| `neighbor_main_recommendation` | recomendación principal del vecino si existe ficha previa |
+| `neighbor_main_recommendation` | orientación principal del vecino si existe ficha previa |
 
-`outputs/tables/classical_recommendations.csv` contiene la orientación generada por similitud:
+`outputs/tables/classical_recommendations.csv` contiene la orientación exploratoria generada por similitud:
 
 | Columna | Descripción |
 |---|---|
@@ -230,14 +230,14 @@ La prioridad de la ficha se interpreta de forma orientativa:
 | `neighbors_used` | vecinos empleados y similitudes |
 | `mean_similarity` | similitud media de los vecinos usados |
 | `method` | método aplicado; valor esperado: `content_based_knn` |
-| `limitations` | limitaciones metodológicas del baseline |
+| `limitations` | limitaciones metodológicas de la línea base |
 
 `outputs/tables/classical_recommender_diagnostics.csv` resume la ejecución:
 
 | Columna | Descripción |
 |---|---|
 | `num_targets` | observaciones jugador-partido evaluadas |
-| `num_recommendations` | recomendaciones clásicas generadas |
+| `num_recommendations` | orientaciones por similitud generadas |
 | `mean_similarity` | similitud media de los vecinos recuperados |
 | `min_similarity` | similitud mínima observada |
 | `max_similarity` | similitud máxima observada |
@@ -247,10 +247,10 @@ La prioridad de la ficha se interpreta de forma orientativa:
 | `k_neighbors` | número de vecinos usado |
 | `overlap_with_heuristic_pct` | coincidencia exploratoria con el perfil heurístico cuando existe; no es accuracy |
 
-Este recomendador no es colaborativo: no usa feedback explícito de usuarios ni validación con entrenadores. Debe interpretarse como baseline exploratorio basado en similitud de métricas jugador-partido, no como predicción de una acción óptima.
+Esta línea base no es colaborativa: no usa feedback explícito de usuarios ni validación con entrenadores. Debe interpretarse como contraste exploratorio basado en similitud de métricas jugador-partido, no como predicción de una acción óptima.
 
-El informe explicativo `outputs/reports/classical_recommender_report.pdf` resume el método, las métricas utilizadas, los diagnósticos de similitud y las recomendaciones agrupadas por partido. Su finalidad es documentar el baseline de forma legible para la memoria, manteniendo la salida tabular como fuente trazable.
+El informe explicativo `outputs/reports/classical_recommender_report.pdf` resume el método, las métricas utilizadas, los diagnósticos de similitud y las orientaciones agrupadas por partido. Su finalidad es documentar la línea base de forma legible para la memoria, manteniendo la salida tabular como fuente trazable.
 
 Las versiones LaTeX se generan en `outputs/reports/tables_latex/`: `recommendations_summary.tex`, `player_recommendation_examples.tex` y `global_player_summary.tex`. Los informes legibles en PDF se generan en `outputs/reports/recommendations_report.pdf` y `outputs/reports/player_recommendation_cards.pdf`.
 
-Las recomendaciones se generan mediante reglas heurísticas sobre métricas agregadas. No son predicciones automáticas de la mejor jugada y no sustituyen al entrenador.
+Las orientaciones tácticas se generan mediante reglas heurísticas sobre métricas agregadas. No son predicciones automáticas de la mejor jugada y no sustituyen al entrenador.

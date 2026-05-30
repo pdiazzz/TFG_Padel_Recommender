@@ -7,7 +7,7 @@ from . import config
 
 
 LIMITATION_TEXT = (
-    "Recomendación heurística basada en métricas agregadas del partido. "
+    "Orientación heurística basada en métricas agregadas del partido. "
     "No incorpora vídeo, marcador contextual, estado físico ni instrucciones tácticas previas."
 )
 
@@ -40,7 +40,7 @@ RULE_DOCUMENTATION = [
     {
         "rule_applied": "no_recommendation_due_to_insufficient_evidence",
         "condition": "Faltan métricas suficientes o ninguna regla encuentra diferencias claras.",
-        "recommendation_type": "No se genera recomendación táctica; se documenta la falta de evidencia.",
+        "recommendation_type": "No se genera orientación táctica; se documenta la falta de evidencia.",
     },
 ]
 
@@ -244,7 +244,7 @@ def generate_recommendations(
                     "no_recommendation_due_to_insufficient_evidence",
                     "no_recommendation_due_to_insufficient_evidence",
                     "Las reglas no encontraron diferencias suficientemente claras con las métricas disponibles.",
-                    "No se fuerza recomendación cuando la evidencia relativa no activa ninguna regla.",
+                    "No se fuerza una orientación cuando la evidencia relativa no activa ninguna regla.",
                 )
             )
 

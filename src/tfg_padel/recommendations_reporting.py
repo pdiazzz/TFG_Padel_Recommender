@@ -26,7 +26,7 @@ plt.rcParams.update(
 
 INSUFFICIENT_RULE = "no_recommendation_due_to_insufficient_evidence"
 STANDARD_LIMITATION_TEXT = (
-    "Recomendación heurística basada en métricas agregadas del partido. "
+    "Orientación heurística basada en métricas agregadas del partido. "
     "No incorpora vídeo, marcador contextual, estado físico ni instrucciones tácticas previas."
 )
 PLAYER_CARD_COLUMNS = [
@@ -173,10 +173,10 @@ PROFILE_DETAILS = {
     },
     "Sin evidencia suficiente": {
         "diagnosis": (
-            "No se detecta evidencia cuantitativa suficiente para generar una recomendación "
+            "No se detecta evidencia cuantitativa suficiente para generar una orientación "
             "táctica individual robusta."
         ),
-        "main": "No formular una recomendación táctica específica sin información adicional.",
+        "main": "No formular una orientación táctica específica sin información adicional.",
         "secondary": "Ampliar muestra, revisar vídeo o incorporar contexto de marcador antes de decidir.",
         "score_bonus": 0.0,
     },
@@ -263,7 +263,7 @@ EVIDENCE_LABELS = {
 DISPLAY_TEXT_REPLACEMENTS = {
     "presion": "presión",
     "metricas": "métricas",
-    "recomendacion": "recomendación",
+    "recomendacion": "orientación",
     "tactica": "táctica",
     "tactico": "táctico",
     "tacticas": "tácticas",
@@ -567,7 +567,7 @@ def build_match_recommendation_summary(recommendations: pd.DataFrame, cards: pd.
             main_profile = match_cards["player_profile"].mode().iloc[0]
             summary_text = (
                 f"Predominan perfiles de tipo {main_profile.lower()} en las fichas de jugador. "
-                f"El partido contiene {len(high_cards)} ficha(s) de prioridad alta y {len(pair_recs)} recomendación(es) de pareja."
+                f"El partido contiene {len(high_cards)} ficha(s) de prioridad alta y {len(pair_recs)} orientación(es) de pareja."
             )
         rows.append(
             {
@@ -601,13 +601,13 @@ def build_recommendations_summary(
 
     rows: list[dict[str, object]] = [
         ("total", "all", total, "Todas las filas de recommendations.csv."),
-        ("total", "real_recommendations", real, "Filas con recomendación táctica real."),
+        ("total", "real_recommendations", real, "Filas con orientación táctica trazable."),
         ("total", "insufficient_evidence", insufficient, "Filas sin evidencia suficiente."),
         ("total", "player_recommendation_cards", player_cards, "Fichas consolidadas jugador-partido."),
-        ("total", "pair_recommendations", pair_recs, "Recomendaciones con scope pair."),
+        ("total", "pair_recommendations", pair_recs, "Orientaciones con scope pair."),
         ("total", "players_with_cards", players_with_cards, "Jugadores con al menos una ficha."),
         ("total", "distinct_rules", distinct_rules, "Reglas distintas activadas."),
-        ("total", "matches_with_recommendations", matches, "Partidos con recomendaciones."),
+        ("total", "matches_with_recommendations", matches, "Partidos con orientaciones."),
     ]
     output = [
         {
@@ -668,6 +668,48 @@ def _write_tabularx(path: Path, headers: list[str], rows: list[list[object]], sp
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
+def _select_profile_examples(cards: pd.DataFrame, max_per_group: int = 1) -> pd.DataFrame:
+    group_column = next(
+        (column for column in ["player_profile", "rules_triggered", "main_recommendation"] if column in cards.columns),
+        None,
+    )
+    if cards.empty or group_column is None:
+        return cards.head(0)
+
+    profile_order = {profile: idx for idx, profile in enumerate(PROFILE_DETAILS)}
+    data = cards.copy()
+    if "player_profile" not in data.columns:
+        data["player_profile"] = ""
+    data["_profile_order"] = data["player_profile"].map(profile_order).fillna(len(profile_order)).astype(int)
+    if "priority_score" not in data.columns:
+        data["priority_score"] = 0
+    data["priority_score"] = pd.to_numeric(data["priority_score"], errors="coerce").fillna(0)
+    scored_columns = ["formatted_evidence", "tactical_diagnosis", "main_recommendation"]
+    for column in scored_columns:
+        if column not in data.columns:
+            data[column] = ""
+        data[column] = data[column].fillna("").astype(str)
+    data["_missing_fields"] = data[scored_columns].apply(lambda row: sum(not value.strip() for value in row), axis=1)
+    data["_evidence_items"] = data["formatted_evidence"].str.count("=")
+    data["_text_length"] = (
+        data["formatted_evidence"].str.len()
+        + data["main_recommendation"].str.len()
+        + data["tactical_diagnosis"].str.len() * 0.35
+    )
+
+    selected = []
+    data = data.sort_values(
+        ["_profile_order", "_missing_fields", "_evidence_items", "priority_score", "_text_length", "match_id", "player"],
+        ascending=[True, True, False, False, True, True, True],
+    )
+    for _, group in data.groupby(group_column, sort=False):
+        selected.append(group.head(max_per_group))
+    if not selected:
+        return cards.head(0)
+    helper_columns = ["_profile_order", "_missing_fields", "_evidence_items", "_text_length"]
+    return pd.concat(selected, ignore_index=True).drop(columns=helper_columns)
+
+
 def write_recommendation_latex_tables(
     recommendations: pd.DataFrame,
     summary: pd.DataFrame,
@@ -675,17 +717,17 @@ def write_recommendation_latex_tables(
     global_summary: pd.DataFrame,
 ) -> None:
     compact_rows = [
-        ["Recomendaciones reales", summary.loc[summary["category"] == "real_recommendations", "count"].iloc[0]],
+        ["Orientaciones con evidencia", summary.loc[summary["category"] == "real_recommendations", "count"].iloc[0]],
         ["Fichas jugador-partido", len(cards)],
-        ["Recomendaciones de pareja", int((recommendations["scope"] == "pair").sum())],
+        ["Orientaciones de pareja", int((recommendations["scope"] == "pair").sum())],
         ["Jugadores con ficha", cards["player"].nunique() if not cards.empty else 0],
         ["Reglas distintas", recommendations.loc[recommendations["rule_applied"] != INSUFFICIENT_RULE, "rule_applied"].nunique()],
-        ["Partidos con recomendaciones", recommendations["match_id"].nunique()],
+        ["Partidos con orientaciones", recommendations["match_id"].nunique()],
         ["Filas sin evidencia suficiente", int((recommendations["rule_applied"] == INSUFFICIENT_RULE).sum())],
     ]
     _write_tabularx(config.RECOMMENDATIONS_SUMMARY_TEX_PATH, ["Indicador", "Valor"], compact_rows, "Xr")
 
-    examples = cards.sort_values(["priority_score", "match_id", "player"], ascending=[False, True, True]).head(8)
+    examples = _select_profile_examples(cards, max_per_group=1)
     example_rows = [
         [
             row["match_label"],
@@ -697,12 +739,13 @@ def write_recommendation_latex_tables(
         ]
         for _, row in examples.iterrows()
     ]
-    _write_tabularx(
+    example_headers = ["Partido", "Jugador", "Perfil", "Prioridad", "Evidencia", "Orientación principal"]
+    example_spec = "p{0.20\\textwidth}p{0.13\\textwidth}p{0.15\\textwidth}p{0.09\\textwidth}p{0.18\\textwidth}X"
+    for path in [
         config.PLAYER_RECOMMENDATION_EXAMPLES_TEX_PATH,
-        ["Partido", "Jugador", "Perfil", "Prioridad", "Evidencia", "Recomendación principal"],
-        example_rows,
-        "p{0.20\\textwidth}p{0.13\\textwidth}p{0.15\\textwidth}p{0.09\\textwidth}p{0.18\\textwidth}X",
-    )
+        config.MEMORY_PLAYER_RECOMMENDATION_EXAMPLES_TEX_PATH,
+    ]:
+        _write_tabularx(path, example_headers, example_rows, example_spec)
 
     global_rows = [
         [
@@ -716,7 +759,7 @@ def write_recommendation_latex_tables(
     ]
     _write_tabularx(
         config.GLOBAL_PLAYER_SUMMARY_TEX_PATH,
-        ["Jugador", "Perfil más frecuente", "Fichas", "Prioridad alta", "Recomendación global"],
+        ["Jugador", "Perfil más frecuente", "Fichas", "Prioridad alta", "Orientación global"],
         global_rows,
         "p{0.16\\textwidth}p{0.20\\textwidth}r r X",
     )
@@ -726,7 +769,7 @@ def write_recommendation_tables(recommendations: pd.DataFrame) -> dict[str, pd.D
     config.ensure_directories()
     validate_recommendation_columns(recommendations)
     if recommendations.empty:
-        raise ValueError("No se pueden generar tablas de recomendaciones: recommendations.csv está vacío.")
+        raise ValueError("No se pueden generar tablas de orientaciones: recommendations.csv está vacío.")
 
     cards = build_player_recommendation_cards(recommendations)
     global_summary = build_player_global_recommendation_summary(cards)
@@ -824,14 +867,14 @@ def _add_executive_summary(
     generated_at: datetime,
 ) -> None:
     writer.start_page("Resumen ejecutivo")
-    writer.text("Informe de recomendaciones tácticas", size=17, weight="bold")
+    writer.text("Informe de orientaciones tácticas", size=17, weight="bold")
     writer.text(f"Fecha de generación: {generated_at:%Y-%m-%d %H:%M}", size=9.5)
     writer.field("Total de filas en recommendations.csv", len(recommendations))
-    writer.field("Recomendaciones reales", _summary_value(summary, "real_recommendations"))
+    writer.field("Orientaciones con evidencia", _summary_value(summary, "real_recommendations"))
     writer.field("Filas sin evidencia suficiente", _summary_value(summary, "insufficient_evidence"))
     writer.field("Fichas jugador-partido", len(cards))
     writer.field("Jugadores con ficha", cards["player"].nunique() if not cards.empty else 0)
-    writer.field("Recomendaciones de pareja", int((recommendations["scope"] == "pair").sum()))
+    writer.field("Orientaciones de pareja", int((recommendations["scope"] == "pair").sum()))
     writer.spacer()
     match_labels = build_match_labels()
     for section, title in [("by_match", "Distribución por partido"), ("by_rule", "Distribución por regla"), ("by_scope", "Distribución por scope")]:
@@ -842,7 +885,7 @@ def _add_executive_summary(
             writer.text(f"- {category}: {row['count']} ({row['share_pct']}%)", size=8.4, width=90)
     writer.heading("Aviso metodológico")
     writer.text(
-        "Las salidas son recomendaciones tácticas heurísticas e interpretables basadas en métricas agregadas. "
+        "Las salidas son orientaciones tácticas heurísticas e interpretables basadas en métricas agregadas. "
         "El sistema no predice automáticamente la mejor acción táctica, no se presenta como predicción autónoma "
         "y debe entenderse como orientación revisable por el entrenador.",
         size=9,
@@ -852,7 +895,7 @@ def _add_executive_summary(
 def _add_criteria_page(writer: PdfWriter) -> None:
     writer.start_page("Criterio de generación")
     writer.text(
-        "Las recomendaciones se generan mediante reglas heurísticas sobre métricas agregadas por jugador-partido "
+        "Las orientaciones se generan mediante reglas heurísticas sobre métricas agregadas por jugador-partido "
         "y pareja-partido. La consolidación agrupa varias reglas activadas para un mismo jugador dentro del mismo "
         "partido y las resume en una ficha táctica. El sistema no predice automáticamente la mejor acción, no "
         "funciona como decisión autónoma y no sustituye al entrenador.",
@@ -862,7 +905,7 @@ def _add_criteria_page(writer: PdfWriter) -> None:
     for rule in RULE_DOCUMENTATION:
         writer.text(rule["rule_applied"], size=9.2, weight="bold")
         writer.field("Condición", rule["condition"], width=90)
-        writer.field("Produce", rule["recommendation_type"], width=90)
+        writer.field("Salida", rule["recommendation_type"], width=90)
     writer.heading("Perfiles y prioridad")
     writer.text(
         "Los perfiles se asignan con prioridad fija: Atacante de alto riesgo, Finalizador eficiente, "
@@ -887,7 +930,7 @@ def _add_match_cards_pages(
 ) -> None:
     if cards.empty:
         writer.start_page("Fichas por partido")
-        writer.text("No hay recomendaciones individuales de tipo player para consolidar.", size=10)
+        writer.text("No hay orientaciones individuales de tipo player para consolidar.", size=10)
         return
     for match_id, group in cards.groupby("match_id", sort=True):
         match_label = str(group["match_label"].iloc[0]) if "match_label" in group.columns else _fallback_match_label(str(match_id))
@@ -898,12 +941,12 @@ def _add_match_cards_pages(
             row = summary.iloc[0]
             writer.field("Fichas de jugador", row["player_cards"])
             writer.field("Fichas de prioridad alta", row["high_priority_player_cards"])
-            writer.field("Recomendaciones de pareja", row["pair_recommendations"])
+            writer.field("Orientaciones de pareja", row["pair_recommendations"])
             writer.field("Perfiles principales", row["main_player_profiles"])
             writer.text(row["summary_text"], size=9)
         pair_rows = recommendations[(recommendations["match_id"] == match_id) & (recommendations["scope"] == "pair")]
         if not pair_rows.empty:
-            writer.heading("Recomendaciones de pareja")
+            writer.heading("Orientaciones de pareja")
             for _, pair in pair_rows.iterrows():
                 evidence = format_evidence(pair["evidence_metric"], pair["evidence_value"])
                 writer.text(f"- {pair['target']}: {_display_recommendation(pair)} Evidencia: {evidence}.", size=8.4, width=92)
@@ -916,8 +959,8 @@ def _add_match_cards_pages(
             writer.field("Reglas activadas", card["rules_triggered"])
             writer.field("Evidencias", card["formatted_evidence"])
             writer.field("Diagnóstico táctico", card["tactical_diagnosis"])
-            writer.field("Recomendación principal", card["main_recommendation"])
-            writer.field("Recomendación secundaria", card["secondary_recommendation"])
+            writer.field("Orientación principal", card["main_recommendation"])
+            writer.field("Orientación secundaria", card["secondary_recommendation"])
             writer.field("Nota para el entrenador", card["coach_note"])
             writer.field("Limitaciones", card["limitations"])
             writer.spacer(0.012)
@@ -928,7 +971,7 @@ def _add_profiles_explanation(writer: PdfWriter) -> None:
     for profile, details in PROFILE_DETAILS.items():
         writer.text(profile, size=10, weight="bold")
         writer.field("Diagnóstico", details["diagnosis"], width=90)
-        writer.field("Recomendación principal", details["main"], width=90)
+        writer.field("Orientación principal", details["main"], width=90)
     writer.heading("Prioridad")
     writer.text(
         "Alta: dos o más reglas activadas, perfil de alto riesgo o combinación de evidencia ofensiva y error "
@@ -952,7 +995,7 @@ def _add_global_summary_pages(writer: PdfWriter, global_summary: pd.DataFrame) -
         writer.field("Prioridad alta", row["high_priority_cards"])
         writer.field("Reglas frecuentes", row["most_common_rules"])
         writer.field("Lectura global", row["global_tactical_reading"])
-        writer.field("Recomendación global", row["global_recommendation"])
+        writer.field("Orientación global", row["global_recommendation"])
         writer.field("Cautela", row["caution"])
         writer.spacer(0.012)
 
@@ -1020,7 +1063,7 @@ def _write_cards_report(
         writer.field("Jugadores con ficha", cards["player"].nunique() if not cards.empty else 0)
         writer.field("Partidos con fichas", cards["match_id"].nunique() if not cards.empty else 0)
         writer.text(
-            "Las fichas consolidan reglas activadas en recomendaciones tácticas heurísticas e interpretables "
+            "Las fichas consolidan reglas activadas en orientaciones tácticas heurísticas e interpretables "
             "basadas en métricas. No predicen la mejor acción, no son una decisión autónoma y funcionan como "
             "orientación revisable por el entrenador.",
             size=9,

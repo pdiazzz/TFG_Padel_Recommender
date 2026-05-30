@@ -15,6 +15,7 @@ TABLES_DIR = OUTPUTS_DIR / "tables"
 FIGURES_DIR = OUTPUTS_DIR / "figures"
 REPORTS_DIR = OUTPUTS_DIR / "reports"
 LATEX_TABLES_DIR = REPORTS_DIR / "tables_latex"
+MEMORY_RESULT_TABLES_DIR = PROJECT_ROOT / "tables" / "resultados"
 
 DOCS_DIR = PROJECT_ROOT / "docs"
 ANEXOS_DIR = PROJECT_ROOT / "anexos"
@@ -138,6 +139,7 @@ PLAYER_GLOBAL_RECOMMENDATION_SUMMARY_PATH = TABLES_DIR / "player_global_recommen
 MATCH_RECOMMENDATION_SUMMARY_PATH = TABLES_DIR / "match_recommendation_summary.csv"
 RECOMMENDATIONS_SUMMARY_TEX_PATH = LATEX_TABLES_DIR / "recommendations_summary.tex"
 PLAYER_RECOMMENDATION_EXAMPLES_TEX_PATH = LATEX_TABLES_DIR / "player_recommendation_examples.tex"
+MEMORY_PLAYER_RECOMMENDATION_EXAMPLES_TEX_PATH = MEMORY_RESULT_TABLES_DIR / "player_recommendation_examples.tex"
 GLOBAL_PLAYER_SUMMARY_TEX_PATH = LATEX_TABLES_DIR / "global_player_summary.tex"
 RECOMMENDATIONS_REPORT_PATH = REPORTS_DIR / "recommendations_report.pdf"
 PLAYER_RECOMMENDATION_CARDS_REPORT_PATH = REPORTS_DIR / "player_recommendation_cards.pdf"
@@ -160,6 +162,7 @@ def ensure_directories() -> None:
         FIGURES_DIR,
         REPORTS_DIR,
         LATEX_TABLES_DIR,
+        MEMORY_RESULT_TABLES_DIR,
         DOCS_DIR,
         ANEXOS_DIR,
         PROJECT_ROOT / "notebooks" / "exploration",

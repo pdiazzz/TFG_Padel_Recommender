@@ -24,9 +24,9 @@ def main() -> None:
     features = artifacts["features"]["feature"].tolist()
     diag = diagnostics.iloc[0].to_dict() if not diagnostics.empty else {}
 
-    print("Recomendador clásico basado en contenido")
+    print("Línea base basada en contenido")
     print(f"Features usadas: {', '.join(features)}")
-    print(f"Recomendaciones generadas: {len(recommendations)}")
+    print(f"Orientaciones generadas: {len(recommendations)}")
     print(f"Vecinos generados: {len(neighbors)}")
     print(f"Similitud media: {diag.get('mean_similarity')}")
     print(f"Cobertura: {diag.get('coverage_pct')}%")

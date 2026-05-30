@@ -19,7 +19,7 @@ from .recommendations_reporting import PdfWriter, _write_pdf_with_fallback
 DEFAULT_K_NEIGHBORS = 3
 METHOD_NAME = "content_based_knn"
 LIMITATION_TEXT = (
-    "Recomendación exploratoria basada en similitud de métricas jugador-partido; "
+    "Orientación exploratoria basada en similitud de métricas jugador-partido; "
     "no validada con expertos ni interpretable como acción óptima."
 )
 
@@ -82,7 +82,7 @@ FEATURE_LABELS = {
 
 
 def load_player_match_metrics(path: Path | None = None) -> pd.DataFrame:
-    """Load player-match metrics used by the content-based baseline."""
+    """Load player-match metrics used by the content-based line."""
     path = path or (config.PROCESSED_DIR / "player_match_metrics.csv")
     if not path.exists():
         raise FileNotFoundError(
@@ -151,7 +151,7 @@ def get_recommender_features(df: pd.DataFrame) -> list[str]:
             features.append(column)
     if not features:
         raise ValueError(
-            "No hay variables numéricas suficientes para el recomendador clásico basado en contenido."
+            "No hay variables numéricas suficientes para la línea base basada en contenido."
         )
     return features
 
@@ -352,7 +352,7 @@ def build_content_based_recommendations(
     neighbors: pd.DataFrame,
     feature_cols: list[str],
 ) -> pd.DataFrame:
-    """Build exploratory recommendations from similar player-match observations."""
+    """Build exploratory guidance from similar player-match observations."""
     rows: list[dict[str, object]] = []
     grouped_neighbors = {
         key: group.copy()
@@ -457,9 +457,9 @@ def _write_summary_report(
     matches_covered = int(diag.get("matches_covered", 0) or 0)
     profile_counts = recommendations["recommended_profile"].value_counts().to_dict()
     lines = [
-        "# Resumen del recomendador clásico basado en contenido",
+        "# Resumen de la línea base basada en contenido",
         "",
-        "Este informe resume un baseline exploratorio de recomendación por similitud de contenido.",
+        "Este informe resume una línea base exploratoria basada en similitud entre actuaciones jugador-partido.",
         "El método representa cada observación jugador-partido mediante métricas agregadas, normaliza las variables con `StandardScaler` y recupera vecinos mediante similitud coseno.",
         "",
         "## Configuración",
@@ -471,7 +471,7 @@ def _write_summary_report(
         "## Resultados",
         "",
         f"- Observaciones objetivo: {num_targets}",
-        f"- Recomendaciones generadas: {num_recommendations}",
+        f"- Orientaciones generadas: {num_recommendations}",
         f"- Vecinos generados: {len(neighbors)}",
         f"- Similitud media: {diag.get('mean_similarity', np.nan)}",
         f"- Cobertura: {diag.get('coverage_pct', 0)} %",
@@ -479,7 +479,7 @@ def _write_summary_report(
         f"- Partidos cubiertos: {matches_covered}",
         f"- Solapamiento con perfil heurístico existente: {diag.get('overlap_with_heuristic_pct', np.nan)} %",
         "",
-        "## Perfiles recomendados",
+        "## Perfiles sugeridos",
         "",
     ]
     if profile_counts:
@@ -494,7 +494,7 @@ def _write_summary_report(
             "- No hay feedback explícito de usuarios ni valoración de entrenadores.",
             "- No existe ground truth táctico; por tanto no se reportan accuracy, precision ni recall.",
             "- El método no predice la mejor acción ni sustituye el criterio del entrenador.",
-            "- La muestra es reducida, por lo que el baseline debe interpretarse como apoyo exploratorio.",
+            "- La muestra es reducida, por lo que la línea base debe interpretarse como apoyo exploratorio.",
             "- Las orientaciones se derivan de similitud entre actuaciones jugador-partido y de fichas heurísticas previas cuando están disponibles.",
             "",
         ]
@@ -511,16 +511,16 @@ def _write_memory_update(
     num_recommendations = int(diag.get("num_recommendations", 0) or 0)
     k_neighbors = int(diag.get("k_neighbors", 0) or 0)
     lines = [
-        "# Actualización de memoria: recomendador clásico basado en contenido",
+        "# Actualización de memoria: línea base basada en contenido",
         "",
         "## Metodología",
         "",
         (
-            "Como baseline clásico complementario, se incorpora un recomendador basado en contenido a nivel "
+            "Como funcionalidad complementaria, se incorpora una línea base basada en contenido a nivel "
             "jugador-partido. Cada observación se representa mediante un vector de métricas agregadas "
             f"({ _feature_list_text(feature_cols) }), normalizado con `StandardScaler`, y se comparan las "
             "observaciones mediante similitud coseno. Para cada jugador en un partido se recuperan sus vecinos "
-            "más similares y se infiere una orientación táctica a partir de los perfiles y recomendaciones "
+            "más similares y se infiere una orientación táctica a partir de los perfiles y orientaciones "
             "heurísticas presentes en esos vecinos."
         ),
         "",
@@ -530,13 +530,13 @@ def _write_memory_update(
             "La implementación se encapsula en `src/tfg_padel/classical_recommender.py` y se ejecuta mediante "
             "`python scripts/generate_classical_recommendations.py`. El módulo carga `player_match_metrics.csv`, "
             "selecciona variables numéricas disponibles, trata valores ausentes o infinitos, calcula similitudes "
-            "coseno y exporta tablas reproducibles de vecinos, recomendaciones y diagnósticos."
+            "coseno y exporta tablas reproducibles de vecinos, orientaciones y diagnósticos."
         ),
         "",
         "## Experimentación",
         "",
         (
-            f"En la ejecución actual se generan {num_recommendations} recomendaciones clásicas "
+            f"En la ejecución actual se generan {num_recommendations} orientaciones por similitud "
             f"sobre {num_targets} observaciones jugador-partido, con k={k_neighbors} "
             f"vecinos por objetivo y similitud media {diag.get('mean_similarity', np.nan)}. El resultado se usa "
             "como contraste exploratorio respecto a las fichas heurísticas, no como evaluación predictiva."
@@ -547,7 +547,7 @@ def _write_memory_update(
         (
             "El algoritmo no es colaborativo porque no hay feedback explícito de usuarios ni interacciones "
             "entrenador-sistema. Tampoco existe validación con entrenadores ni una etiqueta de acción óptima; "
-            "por ello no se reportan métricas como accuracy, precision o recall. Las recomendaciones deben "
+            "por ello no se reportan métricas como accuracy, precision o recall. Las salidas deben "
             "entenderse como orientaciones por similitud con actuaciones previas dentro de una muestra limitada."
         ),
         "",
@@ -558,7 +558,7 @@ def _write_memory_update(
         r"Indicador & Valor \\",
         r"\midrule",
         rf"Observaciones jugador-partido & {num_targets} \\",
-        rf"Recomendaciones clásicas & {num_recommendations} \\",
+        rf"Orientaciones por similitud & {num_recommendations} \\",
         rf"Vecinos por objetivo & {k_neighbors} \\",
         rf"Similitud media & {diag.get('mean_similarity', np.nan)} \\",
         rf"Cobertura & {diag.get('coverage_pct', 0)}\% \\",
@@ -584,12 +584,12 @@ def _add_classical_summary_page(
     feature_cols: list[str],
     generated_at: datetime,
 ) -> None:
-    writer.start_page("Recomendador clásico basado en contenido")
-    writer.text("Informe explicativo de recomendaciones por similitud jugador-partido", size=15, weight="bold")
+    writer.start_page("Línea base basada en contenido")
+    writer.text("Informe explicativo de orientaciones por similitud jugador-partido", size=15, weight="bold")
     writer.field("Fecha de generación", f"{generated_at:%Y-%m-%d %H:%M}")
     writer.field("Método", METHOD_NAME)
     writer.field("Observaciones objetivo", int(_diag_value(diagnostics, "num_targets", 0)))
-    writer.field("Recomendaciones generadas", int(_diag_value(diagnostics, "num_recommendations", 0)))
+    writer.field("Orientaciones generadas", int(_diag_value(diagnostics, "num_recommendations", 0)))
     writer.field("Vecinos generados", len(neighbors))
     writer.field("Vecinos por objetivo", int(_diag_value(diagnostics, "k_neighbors", 0)))
     writer.field("Similitud media", _diag_value(diagnostics, "mean_similarity", ""))
@@ -601,8 +601,8 @@ def _add_classical_summary_page(
         writer.text(f"- {profile}: {count}", size=8.8)
     writer.heading("Lectura metodológica")
     writer.text(
-        "Este informe presenta un baseline clásico de recomendación basado en contenido. "
-        "Las salidas son recomendaciones tácticas heurísticas e interpretables basadas en métricas y similitud "
+        "Este informe presenta una línea base exploratoria basada en contenido. "
+        "Las salidas son orientaciones tácticas interpretables basadas en métricas y similitud "
         "entre actuaciones jugador-partido; no predicen la mejor acción ni sustituyen al entrenador.",
         size=9,
     )
@@ -620,7 +620,7 @@ def _add_classical_method_page(writer: PdfWriter, feature_cols: list[str]) -> No
     writer.heading("Uso de vecinos")
     writer.text(
         "Para cada jugador se recuperan los k vecinos más similares, excluyendo la propia observación. "
-        "Cuando los vecinos tienen ficha táctica heurística previa, el perfil y la recomendación se infieren "
+        "Cuando los vecinos tienen ficha táctica heurística previa, el perfil y la orientación se infieren "
         "por frecuencia de esos vecinos. Si no hay ficha disponible, se usa una rama fallback métrica prudente.",
         size=9,
     )
@@ -628,7 +628,7 @@ def _add_classical_method_page(writer: PdfWriter, feature_cols: list[str]) -> No
     writer.text(
         "No hay feedback explícito de usuarios ni validación con entrenadores. Tampoco existe una etiqueta de "
         "acción óptima, por lo que no se reportan métricas de accuracy, precision o recall. El método debe "
-        "leerse como baseline exploratorio por similitud, no como recomendador autónomo.",
+        "leerse como apoyo exploratorio por similitud, no como sistema autónomo de decisión.",
         size=9,
     )
 
@@ -639,8 +639,8 @@ def _add_classical_recommendation_pages(
     neighbors: pd.DataFrame,
 ) -> None:
     if recommendations.empty:
-        writer.start_page("Recomendaciones")
-        writer.text("No se generaron recomendaciones clásicas.", size=10)
+        writer.start_page("Orientaciones")
+        writer.text("No se generaron orientaciones por similitud.", size=10)
         return
 
     neighbor_groups = {
@@ -656,7 +656,7 @@ def _add_classical_recommendation_pages(
             writer.heading(str(row["player"]))
             writer.field("Perfil sugerido", row["recommended_profile"])
             writer.field("Similitud media", row["mean_similarity"])
-            writer.field("Recomendación sugerida", row["recommended_action"], width=88)
+            writer.field("Orientación sugerida", row["recommended_action"], width=88)
             writer.field("Evidencia", row["evidence"], width=88)
             key = (row["match_id"], row["player"])
             target_neighbors = neighbor_groups.get(key, pd.DataFrame(columns=NEIGHBOR_COLUMNS))
@@ -683,7 +683,7 @@ def _write_classical_pdf(
 
 
 def run_content_based_recommender(k: int = DEFAULT_K_NEIGHBORS) -> dict[str, object]:
-    """Run the full content-based kNN baseline and export reproducible outputs."""
+    """Run the content-based kNN line and export reproducible outputs."""
     config.ensure_directories()
     metrics = load_player_match_metrics()
     cards = _load_recommendation_cards()

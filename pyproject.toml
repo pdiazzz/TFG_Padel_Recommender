@@ -1,7 +1,7 @@
 ﻿[project]
 name = "tfg_padel"
 version = "0.1.0"
-description = "Pipeline offline de analisis y recomendacion tactica para padel"
+description = "Sistema offline de soporte a la decision para analisis tactico de padel"
 authors = [{ name = "Pablo Diaz Merchante" }]
 readme = "README.md"
 requires-python = ">=3.10"

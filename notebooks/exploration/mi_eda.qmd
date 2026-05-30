@@ -1,5 +1,5 @@
 ---
-title: "EDA - Sistema de recomendación de estrategias deportivas en pádel"
+title: "EDA - Análisis táctico de partidos de pádel"
 author: "Pablo Díaz Merchante"
 format: 
   html:
@@ -19,7 +19,7 @@ execute:
 
 # Introducción y definición de objetivos
 
-Este documento realiza un Análisis Exploratorio de Datos (EDA) del dataset resumen_juegos.xlsx, centrado en evaluar el rendimiento de los jugadores de pádel y preparar el terreno para la creación del sistema de recomendación de estrategias.
+Este documento realiza un Análisis Exploratorio de Datos (EDA) del dataset resumen_juegos.xlsx, centrado en evaluar el rendimiento de los jugadores de pádel y explorar indicadores útiles para el análisis táctico posterior al partido.
 Se estudian:
 
 - Estructura del dataset
@@ -30,7 +30,7 @@ Se estudian:
 
 - Relaciones estadísticas entre métricas
 
-- Posibles patrones útiles para el recomendador
+- Posibles patrones útiles para el análisis táctico
 
 # Importación de datos y carga de paquetes
 
@@ -41,23 +41,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 sns.set(style="whitegrid")
-
-# Cargar todas las hojas del Excel
-
-#sheets = pd.read_excel("resumen_juegos.xlsx", sheet_name=None)
-
-#df_list = []
-
-#for name, sheet in sheets.items():
-  #sheet["partido"] = name  # Añadimos nombre del partido
-  #df_list.append(sheet)
-
-# Unimos todo en un único DataFrame
-
-#df = pd.concat(df_list, ignore_index=True)
-
-#df.head()
-
 
 df = pd.read_excel("resumen_partido.xlsx")
 df.head()
@@ -86,11 +69,11 @@ Se incluye una fila final denominada SUMA, que no pertenece al análisis jugador
 
 # Limpieza inicial
 ```{python}
-# Eliminamos filas tipo SUMA
+# Se elimina la fila agregada del Excel.
 
 df = df[df["jugador"].str.upper() != "SUMA"]
 
-# Convirtiendo columnas numéricas correctamente
+# Normalización numérica básica.
 
 numeric_cols_original = ["bola dentro", "error no forzado", "missed", "winner", "total"]
 
@@ -107,14 +90,13 @@ df.info()
 En los datos, el hecho de que un valor sea 0 no es faltante, es algo que tiene sentido. Puede haber 0 errores no forzados y que no sea malo.
 
 ```{python}
-# Rellenar valores vacíos con 0
+# Los nulos en conteos se tratan como ausencia del evento.
 num_cols = ["bola dentro","error no forzado","missed","winner","total","fuerza error"]
 
 for col in num_cols:
     if col in df.columns:
         df[col] = df[col].fillna(0)
 
-# Recalcular porcentajes correctamente
 df["bola dentro_%"] = df["bola dentro"] / df["total"]
 df["error no forzado_%"] = df["error no forzado"] / df["total"]
 df["missed_%"] = df["missed"] / df["total"]
@@ -159,14 +141,12 @@ No tenemos valores faltantes en nuestro dataset
 numeric_cols = ['bola dentro', 'error no forzado', 'missed', 'winner']
 
 for col in numeric_cols:
-    fig, axes = plt.subplots(2, 1, figsize=(7, 6))  # tamaño perfecto
+    fig, axes = plt.subplots(2, 1, figsize=(7, 6))
 
-    # Histograma
     sns.histplot(df[col], kde=True, ax=axes[0])
     axes[0].set_title(f"Histograma de {col}", fontsize=11)
-    axes[0].set_xlabel("")  # quita texto extra
+    axes[0].set_xlabel("")
 
-    # Boxplot
     sns.boxplot(x=df[col], ax=axes[1])
     axes[1].set_title(f"Boxplot de {col}", fontsize=11)
 
@@ -285,28 +265,22 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# 1. FILTRADO: Excluimos las filas donde 'jugador' sea MEDIA o STD
-# El símbolo '~' significa "NO", y '.isin' comprueba si está en la lista.
+# Se excluyen filas agregadas para evitar que entren en el clustering.
 df_clean = df[~df["jugador"].isin(["MEDIA", "STD"])].copy()
 
-# 2. Preparamos los datos usando el dataframe filtrado (df_clean)
 X = df_clean[pct_cols].fillna(0)
 
-# 3. Escalado
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# 4. Clusterización
 kmeans = KMeans(n_clusters=3, random_state=42)
-# Importante: Asignamos el cluster al dataframe filtrado, no al original completo
+# El cluster se asigna sobre la muestra filtrada.
 df_clean["cluster"] = kmeans.fit_predict(X_scaled)
 
-# 5. Visualización
 sns.scatterplot(data=df_clean, x="winner_%", y="error no forzado_%", hue="cluster")
-plt.title("Clusterización de jugadores según rendimiento (Sin MEDIA/STD)")
+plt.title("Clusterización de jugadores según rendimiento (sin filas agregadas)")
 plt.show()
 
-# Mostrar resultados
 print(df_clean[["jugador", "cluster"]])
 
 ```
@@ -322,15 +296,13 @@ Efectividad Ofensiva: Relación entre Winners y Errores No Forzados. Un valor > 
 Capacidad de Presión: Porcentaje de "fuerza error" provocado al rival.
 
 ```{python}
-# Cálculo de métricas avanzadas
 df_clean['efectividad_ofensiva'] = df_clean['winner'] / df_clean['error no forzado']
 df_clean['indice_riesgo'] = df_clean['error no forzado'] / (df_clean['error no forzado'] + df_clean['fuerza error'] + 1e-6)
 df_clean['presion_ejercida_%'] = df_clean['fuerza error'] / df_clean['total']
 
-# Visualización de la efectividad vs riesgo
 plt.figure(figsize=(10, 6))
 sns.scatterplot(data=df_clean, x='indice_riesgo', y='efectividad_ofensiva', hue='jugador', s=100)
-plt.axhline(1, color='red', linestyle='--', alpha=0.6) # Línea de rentabilidad
+plt.axhline(1, color='red', linestyle='--', alpha=0.6)  # referencia de efectividad ofensiva neutra
 plt.title("Relación Riesgo vs. Efectividad por Jugador")
 plt.show()
 
@@ -341,7 +313,7 @@ plt.show()
 El rendimiento en pádel es sinérgico. Agrupamos a los jugadores por sus parejas habituales para comparar el volumen de juego y la eficiencia por lado de la pista.
 
 ```{python}
-# Definición de parejas (basado en el circuito actual)
+# Mapeo manual usado solo en esta exploración.
 parejas_dict = {
     'Agustín Tapia': 'Tapia-Coello',
     'Arturo Coello': 'Tapia-Coello',
@@ -350,7 +322,6 @@ parejas_dict = {
 }
 df_clean['pareja'] = df_clean['jugador'].map(parejas_dict)
 
-# Comparativa de volumen de juego por pareja
 df_parejas = df_clean.groupby('pareja')[['winner', 'error no forzado', 'fuerza error']].sum()
 df_parejas.plot(kind='bar', stacked=True, figsize=(10,6), colormap='viridis')
 plt.title("Volumen de puntos finalizados por Pareja")
@@ -360,10 +331,10 @@ plt.show()
 ```
 
 
-## Identificación de Puntos Débiles (Targeting)
-Analizamos quién comete más errores no forzados y quién sufre más bajo presión (fuerza error). Esto permite al sistema recomendar cargar el juego sobre el jugador con menor bola dentro_% o mayor error no forzado_%
+## Identificación de puntos débiles
+Analizamos quién comete más errores no forzados y quién sufre más bajo presión (fuerza error). Esta lectura puede orientar hipótesis sobre qué jugador recibe más presión o muestra menor consistencia.
 
-## Selección de características para el modelo de recomendación
+## Selección de características para el análisis por similitud
 
 ```{python}
 #| label: pca-analysis
@@ -374,11 +345,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Reutilizamos X_scaled del apartado anterior (métricas de jugadores escaladas)
-pca = PCA(n_components=None) # CORRECCIÓN: usamos n_components en lugar de n_clusters
+# Se reutiliza la matriz escalada del clustering anterior.
+pca = PCA(n_components=None)
 pca.fit(X_scaled)
 
-# Varianza explicada
 varianza_explicada = pca.explained_variance_ratio_
 
 plt.figure(figsize=(8, 4))
@@ -389,7 +359,7 @@ plt.xlabel('Componentes Principales')
 plt.title('Varianza Explicada por las Componentes del PCA')
 plt.show()
 
-# Aplicamos PCA con 2 componentes para visualizar
+# Proyección 2D para visualizar perfiles.
 pca_2 = PCA(n_components=2)
 X_pca = pca_2.fit_transform(X_scaled)
 df_clean['PCA1'] = X_pca[:, 0]
@@ -406,7 +376,7 @@ plt.show()
 
 
 
-## clustering por juegos 
+## Prueba exploratoria no integrada: clustering por juegos
 
 ```{python}
 #| label: clustering-juegos
@@ -419,19 +389,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# --- SIMULACIÓN DE DATOS DE PUNTOS ---
-# Sustituye esto por: df_puntos = pd.read_excel("resumen_partido.xlsx", sheet_name="puntos")
+# Datos simulados para probar la estructura de análisis por juego.
 np.random.seed(42)
 n_puntos = 150
 df_puntos = pd.DataFrame({
-    'juego': np.repeat(np.arange(1, 16), 10), # 15 juegos, 10 puntos por juego aprox
+    'juego': np.repeat(np.arange(1, 16), 10),
     'winner': np.random.randint(0, 2, n_puntos),
     'error_no_forzado': np.random.randint(0, 2, n_puntos),
-    'rally_length': np.random.randint(3, 25, n_puntos) # Número de golpes por punto
+    'rally_length': np.random.randint(3, 25, n_puntos)
 })
-# --------------------------------------
 
-# 1. Agregamos las estadísticas por juego
+# Agregado por juego.
 df_juegos = df_puntos.groupby('juego').agg(
     total_puntos=('juego', 'count'),
     winners_totales=('winner', 'sum'),
@@ -439,15 +407,13 @@ df_juegos = df_puntos.groupby('juego').agg(
     rally_medio=('rally_length', 'mean')
 ).reset_index()
 
-# 2. Escalamos las variables
 scaler_juegos = StandardScaler()
 X_juegos = scaler_juegos.fit_transform(df_juegos[['total_puntos', 'winners_totales', 'errores_totales', 'rally_medio']])
 
-# 3. Clustering (Buscamos 3 tipos de juegos: ej. Rápidos, Disputados, Erráticos)
+# Clustering exploratorio de juegos.
 kmeans_juegos = KMeans(n_clusters=3, random_state=42)
 df_juegos['tipo_juego'] = kmeans_juegos.fit_predict(X_juegos)
 
-# 4. Visualización
 plt.figure(figsize=(9, 5))
 sns.scatterplot(data=df_juegos, x='rally_medio', y='errores_totales', hue='tipo_juego', size='total_puntos', sizes=(50, 250), palette='viridis')
 plt.title("Clustering de Juegos: Rally Medio vs Errores Totales")
@@ -457,14 +423,13 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.show()
 
-# Mostramos el perfil de cada clúster
 display(df_juegos.groupby('tipo_juego').mean().round(2))
 
 ```
 
 
 
-## Predicción de victoria del punto (XGBoost y Random Forest)
+## Prueba exploratoria no integrada: predicción de victoria del punto
 
 ```{python}
 #| label: prediccion-puntos
@@ -475,25 +440,20 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import xgboost as xgb
 
-# --- SIMULACIÓN DE DATOS TÁCTICOS ---
-# OJO: Usa tus variables tácticas reales (quién saca, posición, lado, etc.)
+# Datos simulados para probar una estructura de clasificación; no forman parte del pipeline final.
 df_tactica = pd.DataFrame({
-    'saca_pareja_1': np.random.randint(0, 2, n_puntos), # 1 si saca pareja 1, 0 si pareja 2
+    'saca_pareja_1': np.random.randint(0, 2, n_puntos),
     'devolucion_profunda': np.random.randint(0, 2, n_puntos),
     'globos_tirados': np.random.randint(0, 5, n_puntos),
     'toman_la_red': np.random.randint(0, 2, n_puntos),
-    'gana_punto_pareja_1': np.random.randint(0, 2, n_puntos) # Variable objetivo (Target)
+    'gana_punto_pareja_1': np.random.randint(0, 2, n_puntos)
 })
-# --------------------------------------
 
-# Separar características (X) y objetivo (y)
 X = df_tactica.drop('gana_punto_pareja_1', axis=1)
 y = df_tactica['gana_punto_pareja_1']
 
-# Dividir en entrenamiento y test (80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# --- RANDOM FOREST ---
 rf_model = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
 rf_model.fit(X_train, y_train)
 rf_preds = rf_model.predict(X_test)
@@ -502,7 +462,6 @@ print("=== Rendimiento Random Forest ===")
 print(f"Accuracy: {accuracy_score(y_test, rf_preds):.2f}")
 print(classification_report(y_test, rf_preds))
 
-# --- XGBOOST ---
 xgb_model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42, max_depth=4)
 xgb_model.fit(X_train, y_train)
 xgb_preds = xgb_model.predict(X_test)
@@ -511,7 +470,6 @@ print("\n=== Rendimiento XGBoost ===")
 print(f"Accuracy: {accuracy_score(y_test, xgb_preds):.2f}")
 print(classification_report(y_test, xgb_preds))
 
-# Matriz de confusión visual para XGBoost
 plt.figure(figsize=(5, 4))
 sns.heatmap(confusion_matrix(y_test, xgb_preds), annot=True, fmt='d', cmap='Blues')
 plt.title('Matriz de Confusión - XGBoost')
@@ -521,7 +479,7 @@ plt.show()
 
 ```
 
-## 3 Interpretabilidad de las estrategias con SHAP
+## Interpretabilidad de estrategias pendiente en esta exploración
 
 
 
@@ -530,7 +488,7 @@ plt.show()
 
 # Conclusiones del EDA
 
-- La distribución de errores, winners y bolas dentro muestra patrones claros entre jugadores, base para un modelo de recomendación.
+- La distribución de errores, winners y bolas dentro muestra patrones claros entre jugadores, base para construir indicadores tácticos.
 
 - Se detectan perfiles diferenciados: jugadores más ofensivos (más winners) y otros más consistentes (menos errores).
 
@@ -540,7 +498,6 @@ plt.show()
 
 - Mayor bola dentro_% indica consistencia
 
-- La clusterización permite agrupar jugadores en perfiles tácticos, lo que facilita recomendar emparejamientos o estrategias.
+- La clusterización permite agrupar jugadores en perfiles tácticos, lo que facilita comparar actuaciones y formular hipótesis de análisis.
 
-- Este EDA proporciona las bases necesarias para construir un recomendador de estrategias y parejas óptimas en pádel.
-
+- Este EDA proporciona las bases necesarias para construir una herramienta de soporte a la decisión aplicada al análisis táctico de partidos de pádel.

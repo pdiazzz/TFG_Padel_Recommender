@@ -98,7 +98,7 @@ def generate_all_match_dashboards(
             generated = generate_match_dashboard(match_id, data, out_path)
             status = "ok"
             notes = ""
-        except Exception as exc:  # keep batch generation robust
+        except Exception as exc:  # un partido con error no debe bloquear el resto del lote
             generated = out_path
             status = "error"
             notes = f"{type(exc).__name__}: {exc}"
@@ -212,7 +212,7 @@ def generate_match_dashboard(
     fig.text(
         0.984,
         0.018,
-        "Visualización generada automáticamente a partir de métricas agregadas. Las recomendaciones son heurísticas e interpretables.",
+        "Visualización basada en métricas agregadas. Las orientaciones son heurísticas y revisables.",
         ha="right",
         va="bottom",
         fontsize=7.2,
@@ -250,7 +250,7 @@ def _draw_header(
     ax.text(
         0.04,
         0.39,
-        f"Acciones: {_fmt_int(total_golpes)}   Winners: {_fmt_int(total_winners)}   Errores: {_fmt_int(total_errors)}   Recs: {_fmt_int(len(recommendations))}",
+        f"Acciones: {_fmt_int(total_golpes)}   Winners: {_fmt_int(total_winners)}   Errores: {_fmt_int(total_errors)}   Orient.: {_fmt_int(len(recommendations))}",
         fontsize=9,
         weight="bold",
         color=style["text"],
@@ -536,7 +536,7 @@ def _draw_recommendations(
     cards: pd.DataFrame | None = None,
 ) -> None:
     style = DEFAULT_STYLE
-    _panel(ax, "Top recomendaciones", style)
+    _panel(ax, "Orientaciones destacadas", style)
     rows = _recommendation_rows(recommendations, cards)
     if not rows:
         ax.text(0.5, 0.48, "N/D", ha="center", va="center", fontsize=18, color=style["muted"], transform=ax.transAxes)

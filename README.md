@@ -1,25 +1,27 @@
-# Sistema de Recomendación Deportiva en Pádel
+# Sistema de soporte a la decisión para el análisis táctico de partidos de pádel
 
-Trabajo de Fin de Grado orientado a un pipeline offline de análisis deportivo y generación de recomendaciones tácticas interpretables para partidos de pádel.
+Trabajo de Fin de Grado orientado a un pipeline offline de ciencia de datos para analizar partidos de pádel ya registrados y generar apoyo cuantitativo para entrenadores o analistas.
 
-El proyecto trabaja con CSV etiquetados procedentes de M3 Pádel Academy. El objetivo no es construir un recomendador en tiempo real, sino una herramienta reproducible de ingesta, limpieza, análisis exploratorio, métricas derivadas, perfilado descriptivo y apoyo táctico basado en reglas.
+El proyecto trabaja con CSV etiquetados procedentes de M3 Pádel Academy. Su objetivo principal es construir una herramienta reproducible para ingerir datos, limpiarlos, transformarlos en acciones analizables, calcular métricas, comparar actuaciones y producir tablas, figuras, dashboards e informes útiles para el análisis posterior al partido.
 
 ## Objetivo
 
 Preparar un flujo reproducible que permita:
 
-- cargar varios partidos reales desde `data/raw/`;
+- cargar partidos reales desde `data/raw/`;
 - normalizar y limpiar columnas heterogéneas;
-- calcular métricas por jugador-partido y pareja-partido;
+- transformar eventos etiquetados en acciones analizables;
+- calcular métricas por jugador-partido, pareja-partido y agregados globales;
+- comparar actuaciones de jugadores, parejas y partidos;
 - generar clustering descriptivo a nivel jugador-partido;
-- exportar tablas, figuras e informes para la memoria;
-- producir recomendaciones tácticas justificadas por métricas.
+- exportar tablas, figuras, dashboards e informes para la memoria;
+- producir orientaciones tácticas revisables, justificadas por métricas.
 
 ## Alcance
 
-La experimentacion principal usa diez partidos reales declarados en `data/metadata/matches_metadata.csv`. La version alternativa `25_Madrid_Cuartos_chingalan CSV.csv` queda excluida para evitar duplicar observaciones del partido de Madrid.
+La experimentación principal usa diez partidos reales declarados en `data/metadata/matches_metadata.csv`. La versión alternativa `25_Madrid_Cuartos_chingalan CSV.csv` queda excluida para evitar duplicar observaciones del partido de Madrid.
 
-Las recomendaciones son apoyo a la decisión técnica del entrenador. No sustituyen el análisis experto ni incorporan vídeo, marcador contextual avanzado, estado físico o instrucciones tácticas previas.
+El sistema procesa partidos ya registrados. No es una aplicación en tiempo real, no predice resultados y no decide automáticamente la mejor táctica. Las orientaciones generadas son hipótesis de apoyo al análisis técnico y deben contrastarse con vídeo, marcador contextual, estado físico, instrucciones previas y criterio experto.
 
 ## Estructura
 
@@ -30,7 +32,7 @@ data/
   processed/           # datasets limpios generados
 outputs/
   tables/              # tablas CSV para memoria
-  figures/             # figuras PNG
+  figures/             # figuras PNG y dashboards por partido
   reports/             # informes tecnicos y anexos auxiliares
 scripts/
   run_pipeline.py
@@ -130,22 +132,24 @@ python scripts/generate_match_dashboards.py
 - `outputs/reports/memory_update_classical_recommender.md`
 - `outputs/tables/match_dashboard_summary.csv`
 
-## Recomendaciones
+## Funcionalidades analíticas
 
-El recomendador aplica reglas interpretables sobre métricas agregadas. Por ejemplo, si un jugador tiene `error_pct` superior a la media del partido, se propone aumentar presión o volumen de juego sobre ese jugador con cautela contextual. Cada recomendación se exporta con métrica de evidencia, regla aplicada, justificación y limitaciones.
+El pipeline carga la metadata de partidos, lee los CSV crudos, normaliza nombres de columnas, colapsa eventos redundantes, crea flags derivados y separa las acciones analizables. A partir de esas acciones calcula métricas de volumen, winners, errores, riesgo, efectividad ofensiva y presión ejercida, según el nivel de agregación disponible.
 
-### Generación de informes de recomendaciones
+Las salidas permiten revisar el rendimiento por jugador y pareja, comparar actuaciones entre partidos, analizar perfiles relativos mediante clustering jugador-partido y consultar dashboards individuales por encuentro. Estas visualizaciones y tablas están pensadas como apoyo para la memoria y para una revisión técnica posterior, no como sustituto del análisis experto.
 
-Para generar la salida trazable por regla, las fichas tácticas consolidadas y los informes PDF:
+## Orientaciones tácticas
+
+El sistema incluye un módulo de reglas heurísticas que transforma determinadas evidencias métricas en orientaciones tácticas revisables. Por ejemplo, si un jugador presenta `error_pct` por encima de la media del partido, se documenta una posible línea de presión sobre ese jugador con cautela contextual. Cada fila conserva `match_id`, nivel de análisis, objetivo, métrica de evidencia, valor observado, regla aplicada, orientación, justificación y limitaciones.
+
+Para actualizar estas salidas:
 
 ```bash
 python scripts/generate_recommendations.py
 python scripts/generate_recommendations_report.py
 ```
 
-El primer comando actualiza `outputs/tables/recommendations.csv`, que conserva una fila por regla activada y mantiene la trazabilidad tecnica de `match_id`, `scope`, `target`, metrica de evidencia, regla, justificacion y limitaciones.
-
-El segundo comando genera:
+El primer comando actualiza `outputs/tables/recommendations.csv` y `outputs/tables/latex_recommendations.csv`. El segundo genera tablas de resumen, fichas tácticas por jugador-partido e informes PDF:
 
 - `outputs/tables/recommendations_summary.csv`
 - `outputs/tables/player_recommendation_cards.csv`
@@ -157,13 +161,11 @@ El segundo comando genera:
 - `outputs/reports/tables_latex/player_recommendation_examples.tex`
 - `outputs/reports/tables_latex/global_player_summary.tex`
 
-Las fichas tácticas consolidan las reglas activadas por jugador y partido en perfiles interpretables como `Atacante de alto riesgo`, `Finalizador eficiente`, `Constructor del punto`, `Foco potencial de presión` o `Perfil mixto ofensivo-constructor`. Incluyen `match_label` para mostrar nombres legibles de partido, `formatted_evidence` para presentar las evidencias con etiquetas claras y `priority_reason` para justificar la prioridad asignada.
+Las fichas consolidan reglas activadas por jugador y partido en perfiles interpretables como `Atacante de alto riesgo`, `Finalizador eficiente`, `Constructor del punto`, `Foco potencial de presión` o `Perfil mixto ofensivo-constructor`. Incluyen evidencias formateadas, prioridad y una nota metodológica para evitar sobreinterpretaciones.
 
-Los informes PDF se generan con fuente compatible con UTF-8 y texto académico en español. Las tablas LaTeX de `outputs/reports/tables_latex/` están preparadas para incorporarse a la memoria, usando `tabularx`. Estas salidas siguen siendo recomendaciones tácticas heurísticas e interpretables basadas en métricas: no son predicciones automáticas de la mejor acción ni sustituyen al entrenador.
+## Línea base basada en contenido
 
-### Recomendador clásico basado en contenido
-
-Como baseline exploratorio complementario, el proyecto incluye un recomendador clásico tipo kNN basado en contenido a nivel jugador-partido. Cada observación se representa mediante métricas agregadas como `winner_pct`, `error_pct`, `indice_riesgo`, `efectividad_ofensiva`, `presion_ejercida_pct` y `total_golpes`; las variables se normalizan con `StandardScaler` y se comparan mediante similitud coseno.
+Como funcionalidad secundaria, el proyecto incorpora una línea base basada en contenido a nivel jugador-partido. Cada observación se representa mediante métricas agregadas como `winner_pct`, `error_pct`, `indice_riesgo`, `efectividad_ofensiva`, `presion_ejercida_pct` y `total_golpes`; las variables se normalizan con `StandardScaler` y se comparan mediante similitud coseno.
 
 Ejecución:
 
@@ -180,13 +182,14 @@ Outputs:
 - `outputs/reports/classical_recommender_report.pdf`
 - `outputs/reports/memory_update_classical_recommender.md`
 
-El PDF `classical_recommender_report.pdf` explica el criterio de generación, las métricas usadas, los vecinos recuperados y la orientación sugerida para cada jugador-partido. Este baseline usa, cuando existen, las fichas tácticas heurísticas previas de `player_recommendation_cards.csv` para inferir perfiles y orientaciones desde vecinos similares. No utiliza feedback explícito, no está validado con entrenadores y no debe interpretarse como recomendador autónomo ni como predicción de una acción óptima.
+Esta línea base recupera actuaciones jugador-partido parecidas y usa, cuando existen, fichas tácticas previas para proponer una orientación por similitud. No utiliza feedback explícito, no está validada con entrenadores y no debe interpretarse como evaluación definitiva ni como decisión táctica autónoma.
 
 ## Limitaciones
 
-- Muestra todavia reducida: diez partidos reales.
+- Muestra todavía reducida: diez partidos reales.
 - Dependencia del etiquetado manual de eventos.
 - Los datos crudos no se versionan públicamente.
 - Las fechas quedan como `pending_review` hasta verificación externa.
 - El clustering es descriptivo y no causal.
-- Los valores `NaN` en ratios indican division no definida, no valor cero.
+- Los valores `NaN` en ratios indican división no definida, no valor cero.
+- Las orientaciones tácticas son apoyo cuantitativo revisable; no demuestran mejora competitiva por sí mismas.
