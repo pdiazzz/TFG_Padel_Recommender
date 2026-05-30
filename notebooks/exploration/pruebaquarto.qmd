@@ -1,9 +1,0 @@
----
-title: "Untitled"
-format: html
----
-
-
-```{python}
-print("Hola")
-```

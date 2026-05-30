@@ -15,8 +15,9 @@ venv/
 env/
 .env/
 
-# Jupyter
+# Jupyter/local exploration
 .ipynb_checkpoints/
+notebooks/
 
 # OS/editor
 .DS_Store
@@ -27,21 +28,27 @@ Thumbs.db
 *.swo
 ~$*
 
-# Data outputs
+# Data: raw files are private and processed files are generated
+data/raw/
 data/processed/
 data/interim/
+
+# Generated outputs
 outputs/
 
-# Keep raw data local if needed
-data/raw/*
-!data/raw/.gitkeep
-
-# Local archives created during cleanup
+# Local history and legacy material
 archive/
+scripts/legacy/
+config/
 
 # Models/reports generated outside outputs
 models/
 reports/
+
+# Keep final LaTeX tables selected for the memory
+!tables/
+!tables/resultados/
+!tables/resultados/**
 
 # Sensitive configuration
 .env
