@@ -13,7 +13,6 @@ from tfg_padel import config
 from tfg_padel.io import read_csv_if_exists, write_csv
 from tfg_padel.recommender import generate_recommendations
 from tfg_padel.recommendations_reporting import write_recommendations_summary
-from tfg_padel.reporting import current_summary_from_outputs, write_memoria_updates, write_technical_review
 
 
 def main() -> None:
@@ -33,8 +32,6 @@ def main() -> None:
         )
     write_csv(recommendations, config.TABLES_DIR / "latex_recommendations.csv")
     summary = write_recommendations_summary(recommendations)
-    write_memoria_updates()
-    write_technical_review(current_summary_from_outputs(), [])
     print(f"Orientaciones tácticas generadas: {len(recommendations)}")
     print(f"Resumen de orientaciones: {len(summary)} filas")
     print("Output: outputs/tables/recommendations.csv")

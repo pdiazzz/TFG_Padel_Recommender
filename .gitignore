@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyd
@@ -9,17 +8,17 @@ src/**/*.egg-info/
 .mypy_cache/
 .ruff_cache/
 
-# Virtual environments
+
 .venv/
 venv/
 env/
 .env/
 
-# Jupyter/local exploration
+
 .ipynb_checkpoints/
 notebooks/
 
-# OS/editor
+
 .DS_Store
 Thumbs.db
 *.tmp
@@ -28,34 +27,34 @@ Thumbs.db
 *.swo
 ~$*
 
-# Data: raw files are private and processed files are generated
+
 data/raw/
 data/processed/
 data/interim/
 
-# Generated outputs
+
 outputs/
 
-# Local history and legacy material
+
 archive/
 scripts/legacy/
 config/
 
-# Models/reports generated outside outputs
+
 models/
 reports/
 
-# Keep final LaTeX tables selected for the memory
+
 !tables/
 !tables/resultados/
 !tables/resultados/**
 
-# Sensitive configuration
+
 .env
 *.key
 *.pem
 
-# LaTeX build files
+
 *.aux
 *.log
 *.out

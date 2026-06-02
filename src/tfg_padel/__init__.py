@@ -1,4 +1,4 @@
-"""Offline decision-support analytics for the padel TFG project."""
+
 
 __all__ = [
     "config",

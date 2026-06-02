@@ -84,7 +84,7 @@ def read_csv_with_fallback(path: Path, expected_sep: str = config.RAW_SEPARATOR)
                     )
                 info = {"encoding": encoding, "separator": sep, "rows": len(df), "columns": len(df.columns)}
                 return df, warnings, info
-            except Exception as exc:  # pandas puede fallar por separador, encoding o estructura irregular
+            except Exception as exc:  
                 last_error = exc
                 continue
 

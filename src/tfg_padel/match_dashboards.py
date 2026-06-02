@@ -98,7 +98,7 @@ def generate_all_match_dashboards(
             generated = generate_match_dashboard(match_id, data, out_path)
             status = "ok"
             notes = ""
-        except Exception as exc:  # un partido con error no debe bloquear el resto del lote
+        except Exception as exc: 
             generated = out_path
             status = "error"
             notes = f"{type(exc).__name__}: {exc}"

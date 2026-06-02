@@ -153,7 +153,7 @@ MEMORY_UPDATE_CLASSICAL_RECOMMENDER_PATH = REPORTS_DIR / "memory_update_classica
 
 
 def ensure_directories() -> None:
-    """Create every directory used by the reproducible pipeline."""
+    
     for path in [
         RAW_DIR,
         METADATA_DIR,

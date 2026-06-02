@@ -15,12 +15,7 @@ from .metrics import (
 )
 from .recommender import generate_recommendations
 from .recommendations_reporting import write_recommendations_summary
-from .reporting import (
-    build_dataset_summary,
-    build_matches_summary,
-    write_memoria_updates,
-    write_technical_review,
-)
+from .reporting import build_dataset_summary, build_matches_summary
 from .validation import validate_repository_outputs
 
 
@@ -54,7 +49,6 @@ def run_full_pipeline() -> dict[str, object]:
             "duplicados": 0,
             "outputs_generados": [],
         }
-        write_technical_review(summary, warnings)
         return summary
 
     clean = normalize_and_clean(raw)
@@ -101,7 +95,6 @@ def run_full_pipeline() -> dict[str, object]:
 
     quality_summary, _, quality_warnings = validate_repository_outputs()
     warnings.extend(quality_warnings)
-    write_memoria_updates()
 
     output_paths = [
         config.PROCESSED_DIR / "matches_clean.csv",
@@ -118,7 +111,6 @@ def run_full_pipeline() -> dict[str, object]:
         config.TABLES_DIR / "recommendations.csv",
         config.TABLES_DIR / "recommendations_summary.csv",
         config.REPORTS_DIR / "data_quality_report.md",
-        config.REPORTS_DIR / "memoria_updates.md",
     ]
     generated = [str(path.relative_to(config.PROJECT_ROOT)) for path in output_paths if path.exists()]
     summary = {
@@ -132,7 +124,6 @@ def run_full_pipeline() -> dict[str, object]:
         "outputs_generados": generated,
         "data_quality_rows": len(quality_summary),
     }
-    write_technical_review(summary, warnings)
     return summary
 
 
